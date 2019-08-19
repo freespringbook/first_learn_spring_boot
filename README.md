@@ -62,4 +62,90 @@ rootProject.name = 'demo'
 include 'demo-web'
 ```
 
-5. demo-web 모듈과 같은 방식으로 demo-domain 모듈도 생성
+5. demo-web 모-듈과 같은 방식으로 demo-domain 모듈도 생성
+
+## 2.4 환경 프로퍼티 파일 설정하기
+`application.properties`에서 서버 포트 설정
+```properties
+server.port: 80
+```
+
+`application.yml`을 통한 서버 포트 설정 변경
+```properties
+server:
+    port: 80
+```
+> 만약 application.properties와 application.yml 파일이 둘 다 생성되어 있다면 application.yml만 오버라이드되어 적용됨
+
+### 1. 프로파일에 따른 환경 구성 분리
+`application.yml`에서 프로파일별 설정 구분
+```properties
+server:
+  port: 80
+---
+spring:
+  profiles: local
+server:
+  port: 8080
+---
+spring:
+  profiles: dev
+server:
+  port: 8081
+---
+spring:
+  profiles: real
+server:
+  port: 8082
+```
+
+jar파일로 실행시 간단한 명령으로 프로파일 설정하여 실행
+```bash
+$ java -jar ... -D spring.profiles.active=dev
+```
+
+#### IntelliJ 에서 프로파일 설정
+Edit Configurations - Run/Debug Configuration - Active Profiles 설정
+
+### 2. YAML 파일 매핑하기
+`@Value`와 `@ConfigurationProperties`
+
+| 기능            | @Value | @ConfigurationProperties |
+| --------------- | :----: | :----------------------: |
+| 유연한 바인딩   |   X    |            O             |
+| 메타데이터 지원 |   X    |            O             |
+| SpEL 평가       |   O    |            X             |
+
+> 클래스, 메서드, 필드등 프로그램 요소에 정보를 제공하는 기법 타깃 요소를 제어/관리/명시하는 등의 다양한 기능을 할 수 있다
+
+- 유연한 바인딩: 프로퍼티값을 객체에 바인딩할 경우 필드를 낙타 표기법(Camel Case)로 선언하고  
+프로퍼티의 키는 다양한 형식(낙타 표기법, 케밥 표기법(Kebab Case), 언더바 표기법(Underscore) 등)  
+으로 선언하여 바인딩할 수 있다  
+- 메타데이터 지원: 프로퍼티의 키에 대한 정보를 메타데이터 파일(JSON)로 제공한다  
+키의 이름, 타입, 설명, 디폴트값 등 키 사용에 앞서 힌트가 되는 정보를 얻을 수 있다
+- SpEL(Spring Expression Language, 스프링 표현 언어) 평가: SpEL은 런타임에 객체 참조에 대해  
+질의하고 조작하는 기능을 지원하는 언어  
+특히 메서드 호출 및 기본 문자열 템플릿 기능을 제공  
+`@Value`만 사용 가능
+
+### `@Value` 살펴보기
+프로퍼티의 키를 사용하여 특정한 값을 호출  
+키를 정확히 입력해야 하며 값이 없을 경우에 대해 예외 처리를 해주어야 함
+
+`application.yml`에 test 프로퍼티 추가하기
+```properties
+property:
+  test:
+    name: property depth test
+propertyTest: test
+propertyTestList: a,b,c
+```
+
+#### `@Value`의 매핑 방식
+- `@Value("${property.test.name}")`: 깊이가 존재하는 키값에 대해 '.'로 구분하여 해당 값을 매핑
+- `@Value("${propertyTest}")`: 단일 키값을 매핑
+- `@Value("${noKey:default value}")`: YAML 파일에 키값이 존재하지 않으면 디폴트값이 매핑되도록 설정
+- `@Value("${propertyTestList}")`: 여러 값을 나열할 때는 배열형으로 매핑
+- `@Value("#{'${propertyTestList}'.split(',')}")`: SpEL을 사용하여 ','를 기준으로 List에 매핑
+
+주로 단일 필드값을 가져오는 데 사용

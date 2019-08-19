@@ -1,0 +1,27 @@
+spring:
+  profiles:
+    active: local
+server:
+  port: 80
+---
+spring:
+  profiles: local
+server:
+  port: 8080
+
+
+property:
+  test:
+    name: property depth test
+propertyTest: test
+propertyTestList: a,b,c
+---
+spring:
+  profiles: dev
+server:
+  port: 8081
+---
+spring:
+  profiles: real
+server:
+  port: 8082
