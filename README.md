@@ -170,3 +170,131 @@ Map 타입 자료구조보다 POJO 타입이 더 직관적이고 더 명확하�
 - fruit.color_name
 > 기존 버전에서는 프로퍼티 명에 낙타 표기법, 언더바 표기법, 대문자 등을 모두 지원했지만  
 스프링 부트 2.0부터는 소문자나 케밥 표기법만 지원함
+
+## 2.5 자동 환경 설정 이해하기
+`@SpringBootApplication`은 자동 설정뿐만 아니라 부트 실행에 있어서 필수적인 어노테이션
+
+### 1. 자동 환경 설정 어노테이션
+스프링 부트는 관련 의존성을 스타터라는 묶음으로 제공하며 수동 설정을 지
+
+#### SpringBootApplication 소스 코드
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@SpringBootConfiguration
+@EnableAutoConfiguration
+@ComponentScan(excludeFilters = { @Filter(type = FilterType.CUSTOM, classes = TypeExcludeFilter.class),
+		@Filter(type = FilterType.CUSTOM, classes = AutoConfigurationExcludeFilter.class) })
+public @interface SpringBootApplication {
+    ...
+}
+```
+1. `@SpringBootConfiguration`: 스프링 부트의 설정을 나타내는 어노테이션  
+스프링의 `@Configuration`을 대체하며 스프링 부트 전용으로 사용  
+예를 들어 스프링 부트의 테스트 어노테이션(`@SpringBootTest`)을 사용할 때 찾기 알고리즘을 사용하여  
+계속 `@SpringBootConfiguration` 어노테이션을 찾기 때문에 스프링 부트에서는 필수 어노테이션 중 하나
+
+2. `@EnableAutoConfiguration`: 자동 설정의 핵심 어노테이션  
+클래스 경로에 지정된 내용을 기반으로 영리하게 설정 자동화를 수행  
+특별한 설정값을 추가하지 않으면 기본값으로 작동
+
+3. `@ComponentScan`: 특정 패키지 경로를 기반으로 `@Configuration`에서 사용할 `@Component` 설정 클래스를 찾음
+`@ComponentScan`의 basePackages 프로퍼티값에 별도의 경로를 설정하지 않으면 `@ComponentScan`이 위치한  
+패키지가 루트 경로(BasePackage)로 설정됨
+
+`@SpringBootApplication` 어노테이션은 `@SpringBootConfiguration` + `@EnableAutoConfiguration` +  `@ComponentScan`  
+어노테이션의 조합
+이 중 `@EnableAutoConfiguration`이 자동 환경 설정의 핵심 어노테이션
+
+### 2. `@EnableAutoConfiguration` 살펴보기
+#### @EnableAutoConfiguration 어노테이션 코드
+```java
+@Target(ElementType.TYPE)
+@Retention(RetentionPolicy.RUNTIME)
+@Documented
+@Inherited
+@AutoConfigurationPackage
+@Import(AutoConfigurationImportSelector.class)
+public @interface EnableAutoConfiguration {
+    ...
+}
+```
+`@Import(AutoConfigurationImportSelector.class)` 자동 설정을 지원해주는 어노테이션
+
+#### 빈의 등록과 자동 설정에 필요한 파일
+- META-INF/spring.factories: 자동 설정 타깃 클래스 목록  
+즉, 이곳에 선언되어 있는 클래스 들이 `@EnableAutoConfiguration` 사용 시 자동 설정 타깃 이 됨
+- META-INF/spring-configuration-metadata.json: 자동 설정에 사용할 프로퍼티 저으이 파일  
+미리 구현되어 있는 자동 설정에 프로퍼티만 주입시켜주면 됨  
+따라서 별도의 환경 설정은 필요 없음
+- org/springframework/boot/autoconfigure: 미리 구현해놓은 자동 설정 리스트  
+이름은 '{특정 설정의 이름}AutoConfiguration' 형식으로 지정되어 있으며 모두 자바 설정 방식을 따름
+
+위 파일 모두 `spring-boot-autoconfiguration`에 미리 정의되어 있으며 지정된 프로퍼티값을 사용하여  
+설정 클래스 내부의 값들을 변경할 수 있음
+
+#### H2 자동 설정
+`spring.factories`에서 자동 설정 대상에 해당되는지 확인
+`spring-configuration-metadata.json`에서 주요 프로퍼티값과 설정 가능한 타입 확인
+```properties
+   {
+      "name": "spring.h2.console.path",
+      "type": "java.lang.String",
+      "description": "Path at which the console is available.",
+      "sourceType": "org.springframework.boot.autoconfigure.h2.H2ConsoleProperties",
+      "defaultValue": "\/h2-console"
+    },
+``` 
+
+H2 경로의 기본값은 /h2-console 이고 String 형인 것을 확인
+
+##### application.yml에서 H2 path 변경
+```properties
+spring:
+    h2:
+        console:
+            path: /h2-test
+```
+
+#### 스프링 프로퍼티 문서
+쉽게 프로퍼티 값을 확인할 수 있음  
+https://docs.spring.io/spring-boot/docs/current/reference/html/  
+'A. Common application properties' 카테고리에서 확인  
+
+### 3. 자동 설정 어노테이션 살펴보기
+##### 자동 설정을 위한 조건 어노테이션
+| 조건 어노테이션                   | 적용 조건                                                    |
+| --------------------------------- | ------------------------------------------------------------ |
+| `@ConditionalOnBean`              | 해당하는 빈(Bean) 클래스나 이름이 미리 빈 팩토리에 포함되어 있을 경우 |
+| `@ConditionalOnClass`             | 해당하는 클래스가 클래스 경로에 있을 경우                    |
+| `@ConditionalOnCloudPlatform`     | 해당하는 클라우드 플랫폼이 활용 상태일 경우                  |
+| `@ConditionalOnExpression`        | SpEL에 의존하는 조건일 경우                                  |
+| `@ConditionalOnJava`              | JVM 버전이 일치하는 경우                                     |
+| `@ConditionalOnJndi`              | JNDI가 사용가능하고 특정 위치에 있는 경우                    |
+| `@ConditionalOnMissingBean`       | 해당하는 빈 클래스나 이름이 미리 빈 팩토리에 포함되지 않은 경우 |
+| `@ConditionalOnMissingClass`      | 해당하는 클래스가 클래스 경로에 없을 경우                    |
+| `@ConditionalOnNotWebApplication` | 웹 애플리케이션이 아닌 경우                                  |
+| `@ConditionalOnProperty`          | 특정한 프로퍼티가 지정한 값을 갖는 경우                      |
+| `@ConditionalOnResource`          | 특정한 리소스가 클래스 경로에 있는 경우                      |
+| `@ConditionalOnSingleCandidate`   | 지정한 빈 클래스가 이미 빈 팩토리에 포함되어 있고 단일 후보자로 지정 가능한 경우 |
+| `@ConditionalOnWebApplication`    | 웹 애플리케이션인 경우                                       |
+
+#### 자동 설정을 위한 순서 어노테이션
+| 순서 어노테이션        | 설명                                                         |
+| ---------------------- | ------------------------------------------------------------ |
+| `@AutoConfigureAfter`  | 지정한 특정 자동 설정 클래스들이 적용된 이후에 해당 자동 설정 적용 |
+| `@AutoConfigureBefore` | 지정한 특정 자동 설정 클래스들이 적용되기 이전에 해당 자동 설정 적용 |
+| `@AutoConfigureOrder`  | 자동 설정 순서 지정을 위한 스프링 프레임워크의 `@Order` 변형 어노테이션  기존의 설정 클래스에는 영향을 주지 않고 자동 설정 클래스들 간의 순서만 지정 |
+
+#### H2ConsoleAutoConfiguration 어노테이션
+아래의 세가지 조건에 부합할 때 H2ConsoleAutoConfiguration 클래스가 적용됨
+```java
+// 웹 애플리케이션일 때
+@ConditionalOnWebApplication(type = Type.SERVLET)
+// WebServlet.class가 클래스 경로에 있을 때
+@ConditionalOnClass(WebServlet.class)
+// spring.h2.console.enabled 값이 true 일 때
+@ConditionalOnProperty(prefix = "spring.h2.console", name = "enabled", havingValue = "true", matchIfMissing = false)
+``` 
