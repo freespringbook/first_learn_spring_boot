@@ -20,6 +20,12 @@ fruit:
       color: red
     - name: water melon
       color: green
+
+fruit-data:
+#  colorname: blue
+#  colorName: blue
+#  color-name: blue
+  color_name: blue
 ---
 spring:
   profiles: local

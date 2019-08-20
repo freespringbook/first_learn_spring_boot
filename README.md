@@ -160,3 +160,13 @@ propertyTestList: a,b,c
 
 `@ConfigurationProperties`는 기본 컬렉션 타입뿐만 아니라 POJO 타입 매핑도 제공
 Map 타입 자료구조보다 POJO 타입이 더 직관적이고 더 명확하게 객체를 구성할 수 있기 때문에 좋음
+
+### `@ConfigurationProperties`의 유연한 바인딩
+프로퍼티값을 객체에 바인딩할 경우 필드를 낙타 표기법으로 선언하고 프로퍼티의 키는 다양한 형식  
+(낙타 표기법, 케밥 표기법, 언더바 표기법 등)으로 선언하여 바인딩할 수 있는 것을 말함
+- fruit.colorname
+- fruit.colorName
+- fruit.color-name
+- fruit.color_name
+> 기존 버전에서는 프로퍼티 명에 낙타 표기법, 언더바 표기법, 대문자 등을 모두 지원했지만  
+스프링 부트 2.0부터는 소문자나 케밥 표기법만 지원함

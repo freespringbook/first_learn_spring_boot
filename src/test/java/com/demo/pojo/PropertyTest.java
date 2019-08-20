@@ -7,7 +7,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertThat;
@@ -25,6 +24,9 @@ public class PropertyTest {
     @Autowired
     FruitProperty fruitProperty;
 
+    @Autowired
+    FruitProperties fruitProperties;
+
     @Test
     public void test() {
         List<Fruit> fruitData = fruitProperty.getList();
@@ -37,5 +39,13 @@ public class PropertyTest {
 
         assertThat(fruitData.get(2).getName(), is("water melon"));
         assertThat(fruitData.get(2).getColor(), is("green"));
+    }
+
+    @Test
+    public void binding_test() {
+
+        String name = fruitProperties.getColorName();
+
+        assertThat(name, is("blue"));
     }
 }
