@@ -171,7 +171,7 @@ Map 타입 자료구조보다 POJO 타입이 더 직관적이고 더 명확하�
 > 기존 버전에서는 프로퍼티 명에 낙타 표기법, 언더바 표기법, 대문자 등을 모두 지원했지만  
 스프링 부트 2.0부터는 소문자나 케밥 표기법만 지원함
 
-## 2.5 자동 환경 설정 이해하기
+## 2.5 자동 환 설정 이해하기
 `@SpringBootApplication`은 자동 설정뿐만 아니라 부트 실행에 있어서 필수적인 어노테이션
 
 ### 1. 자동 환경 설정 어노테이션
@@ -298,3 +298,52 @@ https://docs.spring.io/spring-boot/docs/current/reference/html/
 // spring.h2.console.enabled 값이 true 일 때
 @ConditionalOnProperty(prefix = "spring.h2.console", name = "enabled", havingValue = "true", matchIfMissing = false)
 ``` 
+
+### 4. H2 Console 자동 설정 적용하기
+
+#### H2 의존성 추가
+```groovy
+compile('com.h2database:h2')
+```
+
+#### 빈을 등록해 H2 콘솔 사용하기
+```java
+@Configuration
+public class DataSourceConfig {
+
+    @Bean
+    ServletRegistrationBean h2servletRegistration(){
+        ServletRegistrationBean registrationBean = new ServletRegistrationBean(new WebdavServlet());
+        registrationBean.addUrlMappings("/console/*");
+        return registrationBean;
+    }
+}
+```
+
+#### H2 Console 프로퍼티
+```properties
+# H2 Web Console (H2ConsoleProperties)
+spring.h2.console.enabled=false
+spring.h2.console.path=/h2-console
+spring.h2.console.settings.trace=false
+spring.h2.console.web-allow-others=false
+```
+
+#### spring.h2.console.enabled를 true로 변경
+```yaml
+# H2 메모리 DB를 사용하기 위한 설정
+datasource:
+  url: jdbc:h2:mem:testdb
+  
+spring:
+  h2:
+    console:
+      enabled: true
+```
+
+#### H2 런타임 의존성으로 변경
+H2 메모리 데이터베이스는 보통 테스트용으로만 쓰임  
+런타임 시점에만 의존하도록 변경
+```groovy
+runtime('com.h2database:h2')
+```

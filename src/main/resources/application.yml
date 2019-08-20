@@ -1,6 +1,7 @@
 spring:
   profiles:
     active: local
+
 server:
   port: 80
 
@@ -26,9 +27,17 @@ fruit-data:
 #  colorName: blue
 #  color-name: blue
   color_name: blue
+
 ---
 spring:
   profiles: local
+  h2:
+    console:
+      enabled: true
+# H2 메모리 DB를 사용하기 위한 설정
+datasource:
+  url: jdbc:h2:mem:testdb
+
 server:
   port: 8080
 ---
