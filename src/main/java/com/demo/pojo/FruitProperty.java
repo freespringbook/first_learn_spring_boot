@@ -16,5 +16,5 @@ import java.util.Map;
 @Component
 @ConfigurationProperties("fruit")
 public class FruitProperty {
-    private List<Map> list;
+    private List<Fruit> list;
 }
