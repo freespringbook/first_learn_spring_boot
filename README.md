@@ -149,3 +149,14 @@ propertyTestList: a,b,c
 - `@Value("#{'${propertyTestList}'.split(',')}")`: SpEL을 사용하여 ','를 기준으로 List에 매핑
 
 주로 단일 필드값을 가져오는 데 사용
+
+### `@ConfigurationProperties` 살펴보기
+`@ConfigurationProperties`는 기본적으로 prefix를 사용하여 값을 바인딩한다
+
+`application.yml`이 아닌 다른 이름의 YAML 파일을 따로 생성해서 관리할때
+```java
+@ConfigurationProperties(prefix = "fruit")
+```
+
+`@ConfigurationProperties`는 기본 컬렉션 타입뿐만 아니라 POJO 타입 매핑도 제공
+Map 타입 자료구조보다 POJO 타입이 더 직관적이고 더 명확하게 객체를 구성할 수 있기 때문에 좋음

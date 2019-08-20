@@ -3,18 +3,28 @@ spring:
     active: local
 server:
   port: 80
----
-spring:
-  profiles: local
-server:
-  port: 8080
 
-
+# @Value 테스트 프로퍼티 값
 property:
   test:
     name: property depth test
 propertyTest: test
 propertyTestList: a,b,c
+
+# @ConfigurationProperties 테스트 프로퍼티 값
+fruit:
+  list:
+    - name: banana
+      color: yellow
+    - name: apple
+      color: red
+    - name: water melon
+      color: green
+---
+spring:
+  profiles: local
+server:
+  port: 8080
 ---
 spring:
   profiles: dev
