@@ -31,3 +31,20 @@ BookService를 가짜로 객체로 대체하였음
 
 `@MockBean`을 사용하여 가짜 객체를 만들고 given()을 사용하여 getBookList() 메서드의 실행에 대한 반한값을 미리 정의하여  
 MockMvc를 사용하면 해당 URL의 상탯값, 반환값에 대한 테스트를 수행할 수 있음
+
+## 3.3 @DataJpaTest
+`@DataJpaTest` 어노테이션은 JPA 관련 테스트 설정만 로드  
+데이터소스의 설정이 정상적인지, JPA를 사용하여 데이터를 제대로 생성, 수정, 삭제하는지 등의 테스트가 가능함
+
+`@AutoConfigureTestDatabase` 어노테이션의 기본 설정 값인 Replace.Any를 사용하면 기본적으로 내장된 데이터소스를 사용  
+예제에서와 같이 Replace.NONE으로 설정하면 `@ActiveProfiles`에 설정한 프로파일 환경값에 따라 데이터소스가 적용됨
+
+application.yml에서 프로퍼티 설정을 `spring.test.database.replace: NONE`으로 변경 됨
+
+`@DataJpaTest`는 JPA 테스트가 끝날 때마다 자동으로 테스트에 사용한 데이터를 롤백함
+
+`spring.test.database.connection: H2`와 같이 프로퍼티를 설정하는 방법과  
+`@AutoConfigureTestDatabase(connection = H2)` 어노테이션으로 설정하는 방법  
+connection의 옵션으로 H2, Derby, HSQL 등의 테스트 데이터베이스 종류를 선택할 수 있음
+
+테스트용 TestEntityManager를 사용하면 persist, flush, find 등과 같은 기본적인 JPA 테스트를 할 수 있음

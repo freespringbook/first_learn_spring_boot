@@ -1,5 +1,6 @@
-package com.havi.controller;
+package com.havi;
 
+import com.havi.controller.BookController;
 import com.havi.domain.Book;
 import com.havi.service.BookService;
 import org.junit.Test;
