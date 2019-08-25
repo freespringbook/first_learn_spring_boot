@@ -16,3 +16,18 @@
 다만 테스트 서버의 다른 스레드에서 실행 중이면 webEnvironment의 RANDOM_PORT나 DEFINED_PORT를 사용하여 테스트를 수행해도 트랜잭션이 롤백되지 않음
 - `@SpringBootTest`는 기본적으로 검색 알고리즘을 사용하여 `@SpringBootApplication`이나 `@SpringBootConfiguration`어노테이션을 찾음  
 스프링 부트 테스트이기 때문에 해당 어노테이션 중 하나는 필수
+
+## 3.2 @WebMvcTest
+MVC를 위한 테스트  
+웹에서 테스트하기 힘든 컨트롤러를 테스트하는데 적합  
+웹상에서 요청과 응답에 대해 테스트  
+뿐만 아니라 시큐리티 혹은 필터까지 자동으로 테스트하며 수동으로 추가/삭제 가능
+
+`@Controller`, `@ControllerAdvice`, `@JsonComponent`와 Filter, WebMvcConfigurer, HandlerMethodArgumentResolver만 로드됨
+
+`@Service` 어노테이션은 `@WebMvcTest`의 적용 대상이 아님
+BookService 인터페이스를 구현한 구현체는 없지만 `@MockBean`을 적극적으로 활용하여 컨트롤러 내부의 의존성 요소인  
+BookService를 가짜로 객체로 대체하였음
+
+`@MockBean`을 사용하여 가짜 객체를 만들고 given()을 사용하여 getBookList() 메서드의 실행에 대한 반한값을 미리 정의하여  
+MockMvc를 사용하면 해당 URL의 상탯값, 반환값에 대한 테스트를 수행할 수 있음
