@@ -48,3 +48,7 @@ application.yml에서 프로퍼티 설정을 `spring.test.database.replace: NONE
 connection의 옵션으로 H2, Derby, HSQL 등의 테스트 데이터베이스 종류를 선택할 수 있음
 
 테스트용 TestEntityManager를 사용하면 persist, flush, find 등과 같은 기본적인 JPA 테스트를 할 수 있음
+
+## 3.4 @RestClientTest
+`@RestClientTest`는 REST 관련 테스트를 도와주는 어노테이션  
+REST 통신의 데이터형으로 사용되는 JSON 형식이 예상대로 응답을 반환하는지 등을 테스트
