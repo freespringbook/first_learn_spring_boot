@@ -22,3 +22,27 @@
   JSON 데이터형의 파싱, 데이터 바인딩 함수 등을 제공
 - `spring-web`: HTTP Integration, Servlet filters, Spring HTTP invoker 및 HTTP 코어를 포함시킨 라이브러리
 - `spring-webmvc`: request를 전달하는 MVC로 디자인된 DispatcherServlet 기반의 라이브러리
+
+### 3. 도메인 매핑하기
+```java
+@GeneratedValue(strategy = GenerationType.IDENTITY)
+```
+기본 키가 자동으로 할당되도록 설정하는 어노테이션  
+기본키 할당 전략을 선택할 수 있는데, 키 생성을 데이터베이스에 위임하는 IDENTITY 전략을 사용
+> 스프링 부트 1.x는 기본 키 할당 전략이 IDENTITY 지만 2.x부터는 TABLE로 변경됨
+> 따라서 명확히 IDENTITY 로 명시하여 사용하지 않으면 한 테이블에서만 시퀀스가 관리되는 현상이 발생하게 됨
+
+```java
+@Enumerated(EnumType.STRING)
+```
+Enum 타입 매핑용 어노테이션  
+`@Enumerated` 어노테이션을 이용해 자바 enum형과 데이터베이스 데이터 변환을 지원함  
+실제로 자바 enum 형이지만 데이터베이스의 String형으로 변환하여 저장하겠다고 선언한 것
+
+```java
+@OneToOne(fetch = FetchType.LAZY)
+```
+도메인 Board와 Board가 필드 값으로 갖고 있는 User 도메인을 1:1 관계로 설정하는 어노테이션  
+실제로 DB에 저장될 때는 User 객체가 저장되는 것이 아니라 User의 PK인 user_idx 값이 저장됨  
+fetch는 eager와 lazy 두 종류가 있는데 전자는 처음 Board 도메인을 조회할 때 즉시 관련 User 객체를 함께 조회한다는 뜻이고  
+후자는 User 객체를 조회하는 시점이 아닌 객체가 실제로 사용될 때 조회한다는 뜻
