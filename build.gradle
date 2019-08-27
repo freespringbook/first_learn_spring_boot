@@ -1,34 +1,41 @@
-plugins {
-    id 'org.springframework.boot' version '2.1.7.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.8.RELEASE'
-    id 'java'
+//1. 빌드 스크립트 내부에 버전, 의존 라이브럴, 저장소를 설정해 스프링 부트 플러그인을 사용할 수 있게 함
+buildscript {
+    ext {
+        springBootVersion = '2.1.7.RELEASE'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
 }
+//2. 필요한 플러그인을 적용
+apply plugin: 'java'
+apply plugin: 'org.springframework.boot'
+//3. 종속성 관리를 제공하는 플러그인
+//스프링 부트 1.x 버전에서는 기본으로 제공했지만 스프링 부트 2.0 이상에서는 플러그인 등록을 명시해주어야 함
+apply plugin: 'io.spring.dependency-management'
 
-group = 'com.web'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '12'
-
-configurations {
-    developmentOnly
-    runtimeClasspath {
-        extendsFrom developmentOnly
-    }
-    compileOnly {
-        extendsFrom annotationProcessor
-    }
-}
+sourceCompatibility = 12
 
 repositories {
     mavenCentral()
 }
 
+//4. 프로젝트 내에 사용할 라이브러리의 의존성을 설정
+//메인 부트 버전에 맞게 호환성을 가져오기 위해 디폴트 버전 사용
 dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
-    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly 'org.projectlombok:lombok'
-    developmentOnly 'org.springframework.boot:spring-boot-devtools'
-    runtimeOnly 'com.h2database:h2'
-    annotationProcessor 'org.projectlombok:lombok'
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-thymeleaf')
+    compile('org.springframework.boot:spring-boot-starter-data-jpa')
+    //5. 런타임 시점에만 H2 사용하도록 설정
+    runtime('com.h2database:h2')
+    runtime('org.springframework.boot:spring-boot-devtools')
+    //6. compileOnly는 컴파일 전용 종속성 선언 설정
+    //기존의 provided와 유사함
+    //주로 컴파일 시점에만 필요하고 런타임 시점에는 필요 없을 때 많이 사용
+    compileOnly('org.projectlombok:lombok')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
 }
