@@ -60,3 +60,15 @@ fetch는 eager와 lazy 두 종류가 있는데 전자는 처음 Board 도메인�
 타임리프를 사용하여 게시글 리스트 기능 만들기
 > 서버 사이드 템플릿이란 미리 정의된 HTML에 데이터를 반영하여 뷰를 만드는 작업을 서버에서 진행하고 클라이언트에 전달하는 방식  
 흔히 사용하는 JSP, 타임리프 등이 서버 사이드 템플릿 엔진이며 스프링 부트 2.0 에서 지원하는 템플릿 엔진은 타임리프, 프리마커, 무스타치, 그루비 템플릿등이 있음
+
+### 7. 타임리프 자바 8 날짜 포맷 라이브러리 추가하기
+**temporals**를 사용할 수 있게 해주는 `thymeleaf-extras-java8time` 의존성은 `spring-boot-stater-thymeleaf` 스타터에 포함되어 있음
+#### `thymeleaf-extra-java8time` 라이브러리 주요 날짜 포맷팅 함수
+##### 단일 값을 날짜 값으로 변환해주는 `format()`함수
+`${#temporals.format(temporal, 'yyyy/MM/dd HH:mm')}`
+##### Array 타입을 변환해주는 `arrayFormat()` 함수 
+`${#temporals.arrayFormat(temporalsArray, 'yyyy/MM/dd HH:mm')}`
+##### List 타입을 변환해주는 `listFormat()` 함수
+`${#temporals.listFormat(temporalsList, 'yyyy/MM/dd HH:mm')}`
+##### Set 타입을 변환해주는 `setFormat()` 함수
+`${#temporals.setFormat(temporalsSet, 'yyyy/MM/dd HH:mm')}`

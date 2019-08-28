@@ -48,6 +48,11 @@
                         <td th:text="${board.idx}"></td>
                         <td th:text="${board.boardType.value}"></td>
                         <td><a th:href="'/board?idx='+${board.idx}" th:text="${board.title}"></a></td>
+                        <!--
+                            temporals의 format 함수를 사용하여 날짜 포맷 변환을 수행
+                            포매팅 없이 그대로 날짜를 출력하면 LocaDateTime의 기본형인 ISO 방식으로 출력됨
+                            일반적인 날짜 표기 형식(yyyy/MM/dd HH:mm)으로의 변환은 직접 포매팅 메서드를 만들거나 제공되는 라이브러리를 사용
+                         -->
                         <td th:text="${#temporals.format(board.createdDate,'yyyy-MM-dd HH:mm')}"></td>
                         <td th:text="${#temporals.format(board.updatedDate,'yyyy-MM-dd HH:mm')}"></td>
                     </tr>
