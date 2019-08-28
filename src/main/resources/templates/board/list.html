@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!--
+    th는 기존의 html을 효과적으로 대체하는 네임스페이스
+    th:test 프로퍼티와 함께 사용하면 내부에 표현된 #{...} 구문을 실젯값으로 대체함
+-->
+<head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>Board Form</title>
+    <!--
+        @{...}는 타임리프의 기본 링크 표현 구문임
+        server-relative URL 방식
+        즉 동일 서버 내의 다른 컨텍스트로 연결해주는 방식으로 서버의 루트 경로를 기준으로
+        구문에서 경로를 탐색하여 href의 URL을 대체함
+    -->
+    <link rel="stylesheet" th:href="@{/css/base.css}" />
+    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
+</head>
+<body>
+    <div th:replace="layout/header::header"></div>
+
+    <div class="container">
+        <div class="page-header">
+            <h1>게시글 목록</h1>
+        </div>
+        <div class="pull-right" style="width:100px;margin:10px 0;">
+            <a href="/board" class="btn btn-primary btn-block">등록</a>
+        </div>
+        <br/><br/><br/>
+        <div id="mainHide">
+            <table class="table table-hover">
+                <thead>
+                <tr>
+                    <th class="col-md-1">#</th>
+                    <th class="col-md-2">서비스 분류</th>
+                    <th class="col-md-5">제목</th>
+                    <th class="col-md-2">작성 날짜</th>
+                    <th class="col-md-2">수정 날짜</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!--
+                    th:each는 반복 구문으로 ${boardList}에 담긴 리스트를 Board 객체로 순차 처리함
+                    Board 객체에 담긴 get* 메서드를 board.*로 접근할 수 있다
+                    예제에서 board.idx.board.title과 같이 사용할 수 있는 이유는 Board 객체에 getIdx()와 getTitle() 메서드가 정의되어 있기 때문
+                -->
+                    <tr th:each="board : ${boardList}">
+                        <td th:text="${board.idx}"></td>
+                        <td th:text="${board.boardType.value}"></td>
+                        <td><a th:href="'/board?idx='+${board.idx}" th:text="${board.title}"></a></td>
+                        <td th:text="${#temporals.format(board.createdDate,'yyyy-MM-dd HH:mm')}"></td>
+                        <td th:text="${#temporals.format(board.updatedDate,'yyyy-MM-dd HH:mm')}"></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <br/>
+        <!-- Pagination -->
+
+        <!-- /Pagination -->
+    </div>
+
+    <div th:replace="layout/footer::footer"></div>
+</body>
+</html>
