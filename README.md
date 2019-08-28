@@ -72,3 +72,12 @@ fetch는 eager와 lazy 두 종류가 있는데 전자는 처음 Board 도메인�
 `${#temporals.listFormat(temporalsList, 'yyyy/MM/dd HH:mm')}`
 ##### Set 타입을 변환해주는 `setFormat()` 함수
 `${#temporals.setFormat(temporalsSet, 'yyyy/MM/dd HH:mm')}`
+
+### 8. 페이징 처리하기 
+#### 페이징 객체를 사용해서 뷰 쪽에 구현할 기능
+- 맨 처음으로 이동 버튼
+- 이전 페이지로 이동 버튼(첫 페이지면 미노출)
+- 10페이지 단위로 이동 버튼
+- 다음 페이지로 이동 버튼(마지막 페이지면 미노출)
+- 맨 마지막 페이지로 이동 버튼
+

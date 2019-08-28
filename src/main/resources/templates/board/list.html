@@ -61,7 +61,36 @@
         </div>
         <br/>
         <!-- Pagination -->
+        <nav aria-label="Page navigation" style="text-align:center;">
+            <!--
+                th:with 구문을 사용하여 ui 태그 안에서 사용할 변수를 정의함
+                startNumber와 endNumber 변수로 페이지의 처음과 끝을 동적으로 계산하여 초기화함
+                변수 계산 로직은 기본 10페이지 단위로 처리함
+            -->
+            <ul class="pagination" th:with="startNumber=${T(Math).floor(boardList.number/10)}*10+1, endNumber=(${boardList.totalPages} > ${startNumber}+9) ? ${startNumber}+9 : ${boardList.totalPages}">
+                <li><a aria-label="Previous" href="/board/list?page=1">&laquo;</a></li>
+                <!--
+                    pageable 객체에는 편리하게도 해당 페이지가 처음인지(isFirst) 마지막인지(isLast)에 대한 데이터(불린형)를 제공함
+                    이를 사용하여 이전/다음 페이지의 미노출 여부를 결정
+                 -->
+                <li th:style="${boardList.first} ? 'display:none'">
+                    <a th:href="@{/board/list(page=${boardList.number})}">&lsaquo;</a>
+                </li>
+                <!--
+                    각 페이지 버튼은 th:each를 사용하여 startNumber부터 endNumber까지를 출력시킴
+                    pageable은 현재 페이지를 알려주는 number 객체가 0부터 시작함
+                    그래서 ${boardList.number}+1로 비교하여 현재 페이지 번호일 경우 classdp 현재 페이지임을 보여주는 'active' 프로퍼티를 추가함
+                 -->
+                <li th:each="page :${#numbers.sequence(startNumber, endNumber)}" th:class="(${page} == ${boardList.number}+1) ? 'active'">
+                    <a th:href="@{/board/list(page=${page})}" th:text="${page}"><span class="sr-only"></span></a>
+                </li>
 
+                <li th:style="${boardList.last} ? 'display:none'">
+                    <a th:href="@{/board/list(page=${boardList.number}+2)}">&rsaquo;</a>
+                </li>
+                <li><a aria-label="Next" th:href="@{/board/list(page=${boardList.totalPages})}">&raquo;</a></li>
+            </ul>
+        </nav>
         <!-- /Pagination -->
     </div>
 
