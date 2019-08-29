@@ -92,3 +92,74 @@ end
 이때 필요한 파라미터는 클라이언트 ID(client-id), 클라이언트 비밀번호(client-secret), 리다이렉트 URI, 인증 타입임
 
 3. 마지막으로 응답받은 엑세스 토큰을 사용하여 리소스 서버에 사용자의 데이터를 요청함
+
+> 엑세스 토큰  
+로그인 세션에 대한 보안 자격을 증명하는 식별 코드
+사용자, 사용자 그룹, 사용자 권한 및 경우에 따라 특정 API 사용을 보증하는 역할을 함
+
+## 5.2 스프링 부트 시큐리티 + OAuth2 설계하기
+```puml
+@startuml
+title 스프링 시큐리티 + OAuth2 적용 흐름도
+:사용자;
+:Tomcat 8080]
+floating note left: 스프링 세션
+if(스프링 시큐리티 컨텍스트 세션이 있는가?) then (Yes)
+  -[#blue]-> Yes;
+  :요청한 URL 접근]
+  stop
+else (No)
+  if(가입된 사용자인가?) then (Yes)
+  -[#blue]->
+  :요청한 URL 접근]
+  stop
+  else (No)
+    :소셜에 따라 User 객체 생성]
+    split
+      :페이스북]
+    split again
+      :구글]
+    split again
+      :카카오]
+    end split
+    :사용자 지정;
+    stop
+  endif
+endif
+  
+@enduml
+```
+![스프링 시큐리티 + OAuth2 적용 흐름도](http://bit.ly/30J9Qun)
+1. 사용자가 애플리케이션에 접속하면 해당 사용자에 대해 이전 로그인 정보(세션)의 유무를 체크
+
+2. 세션이 있으면 그대로 세션을 사용하고, 없으면 OAuth2 인증 과정을 거치게 됨
+
+3. 이메일을 키값으로 사용하여 이미 가입된 사용자인지 체크  
+이미 가입된 사용자라면 등록된 정보를 반환하여 요청한 URL로의 접근을 허용하고, 아니라면 새롭게 User 정보를 저장하는 과정을 진행
+
+4. 각 소셜 미디어에서 제공하는 User 정보가 다르기 때문에 소셜 미디어에 따라 User 객체를 생성한 후 DB에 저장함  
+
+**! 세션이 있거나 성공한 사용자는 요청한 URL로의 접근을 허용함**
+
+
+##### 소셜 미디어 계정으로 커뮤니티 게시판에 로그인하는 FLOW
+```puml
+@startuml
+title 커뮤니티 게시판 시큐리티/OAuth2 흐름
+
+(권한별 페이지 구성) as (authorization)
+
+(페이스북) -down- (authorization)
+(구글) -down- (authorization)
+(카카오) -down- (authorization)
+(authorization) -right- (권한 설정)
+(권한 설정) -right- (커뮤니티)
+(세션 설정) -down- (커뮤니티)
+(커뮤니티) -right- (OAuth2 인증)
+(OAuth2 인증) -down- (페이스북 )
+(OAuth2 인증) -down- (구글 )
+(OAuth2 인증) -down- (카카오 )
+
+@enduml
+```
+![커뮤니티 게시판 시큐리티/OAuth2 흐름](http://bit.ly/2ZssRUz)
