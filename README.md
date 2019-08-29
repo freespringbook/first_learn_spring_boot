@@ -1,90 +1,94 @@
 # 처음 배우는 스프링 부트2
-## 4.3 커뮤니티 게시판 구현하기
-##### 개발 순서
-1. 프로젝트 의존성 구성
-2. 스프링 부트 웹 스타터 살펴보기
-3. 도메인 매핑하기
-4. 도메인 테스트하기
-5. CommandLineRunner를 사용하여 DB에 데이터 넣기
-6. 게시글 리스트 기능 만들기
-7. 타임리프 자바 8 날짜 포맷 라이브러리 추가하기
-8. 페이징 처리하기
-9. 작성 폼 만들기
+## 5. 스프링 부트 시큐리티 + OAuth2
+스프링 부트 프레임워크는 인증과 권한에 관련된 강력한 기능인 스프링 부트 시큐리티를 제공함
+스프링 부트 시큐리티는 스프링 시큐리티의 번거로운 설정을 간소화 시켜주는 래핑 프레임워크
 
-### 1. 프로젝트 의존성 구성
-필요한 build.gradle 구성
+## 5.1 배경지식 소개
+스프링 부트 시큐리티는 스프링 시큐리티에 스타터를 제공해 더 빠른 설정을 지원하는 프로젝트임
 
-### 2. 스프링 부트 웹 스타터 살펴보기
-- `spring-boot-starter`: 스프링 부트를 시작하는 기본적인 설정이 담겨 있는 스타터
-- `spring-boot-starter-tomcat`: 내장 톰캣을 사용하기 위한 스타터
-- `hibernate-validator`: 어노테이션 기반의 표준화된 제약 조건 및 유효성 검사 규칙을 표현하는 라이브러리
-- `spring-boot-starter-json`: jackson 라이브러리를 지원해주는 스타터
-  JSON 데이터형의 파싱, 데이터 바인딩 함수 등을 제공
-- `spring-web`: HTTP Integration, Servlet filters, Spring HTTP invoker 및 HTTP 코어를 포함시킨 라이브러리
-- `spring-webmvc`: request를 전달하는 MVC로 디자인된 DispatcherServlet 기반의 라이브러리
+### 1. 스프링 부트 시큐리티
+스프링 부트 시큐리티에서 가장 중요한 개념
+#### 인증(Authentication)
+사용자(클라이언트)가 애플리케이션의 특정 동작에 관하여 허락(인증)된 사용자인지 확인하는 절차
+웹사이트 로그인을 인증이라 생각하면 됨
 
-### 3. 도메인 매핑하기
-```java
-@GeneratedValue(strategy = GenerationType.IDENTITY)
+#### 권한부여(Authorization)
+데이터나 프로그램 등의 특정 자원이나 서비스에 접근할 수 있는 권한을 허용하는 것
+예를 들어 A는 VIP 회원이고, B는 일반 회원이라면 두 회원의 권한이 다르게 부여됨
+
+#### 그외 인증방식
+- 크리덴셜(Credential) 기반 인증 방식: 사용자명(Principle)과 비밀번호(Credential)로 인증하는 전통적인 인증 방식
+- 이중 인증 방식: OTP와 같이 추가적인 인증 방식을 도입에 한번에 2가지 방법으로 인증하는 방식
+- OAuth2 인증 방식: 소셜 미디어를 사용해 편리하게 인증하는 방식
+
+### 2. OAuth2
+OAuth는 토큰을 사용한 범용적인 방법의 인증을 제공하는 표준 인증 프로토콜
+OAuth2는 OAuth 프로토콜의 버전 2 서드파티(3rd party)를 위한 범용적인 인증 표준
+
+#### OAuth2에서 제공하는 승인 타입 4가지
+##### 권한 부여 코드 승인 타입(Authorization Code Grant Type)
+클라이언트가 다른 사용자 대신 특정 리소스에 접근을 요청할 때 사용됨
+리소스 접근을 위한 사용자명과 비밀번호, 권한 서버에 요청해서 받은 권한 코드를 함께 활용하여 리소스에  
+대한 엑세스 토큰을 받으면 이를 인증에 이용하는 방식
+
+페이스북, 구글, 카카오 등의 소셜 미디어 들이 웹 서버 형태의 클라이언트를 이 방식으로 지원  
+웹 서버에서 장기 엑세스 토큰(long-lived access token)을 사용하여 사용자 인증을 처리
+
+##### 암시적 승인 타입(Implicit Grant Type)
+권한 부여 코드 승인 타입과 다르게 권한 코드 교환 단계 없이 엑세스 토큰을 즉시 반환받아 이를 인증에 이용하는 방식
+
+##### 리소스 소유자 암호 자격 증명 승인 타입(Resource Owner Password Credentials Grant Type)
+클라이언트가 암호를 사용하여 엑세스 토큰에 대한 사용자의 자격 증명을 교환하는 방식
+
+##### 클라이언트 자격 증명 승인 타입(Client Credentials Grant Type)
+클라이언트가 컨텍스트 외부에서 엑세스 토큰을 얻어 특정 리소스에 접근을 요청할 때 사용하는 방식 
+
+```puml
+header Authorization Code Grant Type
+title 권한 부여 코드 승인 타입 시퀀스 다이어그램
+
+participant 리소스_주인
+클라이언트 -> 권한서버: 권한 부여 코드 요청
+
+activate 권한서버
+rnote over 권한서버
+  client_id, redirect_url,
+  response_type=code의 파라미터로 
+  요청하면 코드값 반환
+end rnote
+리소스_주인 -> 권한서버: 로그인
+권한서버 --> 클라이언트: 권한 부여 코드 응답
+deactivate 권한서버
+
+클라이언트 -> 권한서버: 엑세스 토큰으로 교환 요청
+activate 권한서버
+rnote over 권한서버
+  client_id, client_secret, redirect_url,
+  grant_type=authorization_code를 사용하여 권한 부여 코드 반환
+end rnote
+클라이언트 <-- 권한서버: 엑세스 토큰 응답
+deactivate 권한서버
+
+loop 
+  클라이언트 -> 리소스_서버: 엑세스 토큰을 사용하여 API 호출
+  activate 리소스_서버
+  클라이언트 <-- 리소스_서버: 요청한 데이터 응답
+  deactivate 리소스_서버
+end
 ```
-기본 키가 자동으로 할당되도록 설정하는 어노테이션  
-기본키 할당 전략을 선택할 수 있는데, 키 생성을 데이터베이스에 위임하는 IDENTITY 전략을 사용
-> 스프링 부트 1.x는 기본 키 할당 전략이 IDENTITY 지만 2.x부터는 TABLE로 변경됨
-> 따라서 명확히 IDENTITY 로 명시하여 사용하지 않으면 한 테이블에서만 시퀀스가 관리되는 현상이 발생하게 됨
+![권한 부여 코드 승인 타입 시퀀스 다이어그램](http://bit.ly/2PlTpmz)
 
-```java
-@Enumerated(EnumType.STRING)
-```
-Enum 타입 매핑용 어노테이션  
-`@Enumerated` 어노테이션을 이용해 자바 enum형과 데이터베이스 데이터 변환을 지원함  
-실제로 자바 enum 형이지만 데이터베이스의 String형으로 변환하여 저장하겠다고 선언한 것
+- 리소스 주인(resource owner): 인증이 필요한 사용자
+- 클라이언트(client): 웹사이트
+- 권한 서버(authorization server): 페이스북/구글/카카오 서버
+- 리소스 서버(resource server): 페이스북/구글/카카오 서버
 
-```java
-@OneToOne(fetch = FetchType.LAZY)
-```
-도메인 Board와 Board가 필드 값으로 갖고 있는 User 도메인을 1:1 관계로 설정하는 어노테이션  
-실제로 DB에 저장될 때는 User 객체가 저장되는 것이 아니라 User의 PK인 user_idx 값이 저장됨  
-fetch는 eager와 lazy 두 종류가 있는데 전자는 처음 Board 도메인을 조회할 때 즉시 관련 User 객체를 함께 조회한다는 뜻이고  
-후자는 User 객체를 조회하는 시점이 아닌 객체가 실제로 사용될 때 조회한다는 뜻
+1. 클라이언트가 파라미터로 클라이언트 ID, 리다이렉트 URI, 응답 타입을 code로 지정하여 권한서버에 전달  
+정상적으로 인증이 되면 권한 부여 코드를 클라이언트에 보냄(응답 타입은 code, token이 사용 가능  
+응답 타입이 token일 때가 암시적 승인 타입에 해당함)
 
-### 4. 도메인 테스트하기
-##### 컨텍스트
-빈의 생성과 관계 설정 같은 제어를 담당하는 IOC 객체를 빈 팩토리라 부르며 이러한 빈 팩토리를 더 확장한 개념이 애플리케이션 컨텍스트이다
+2. 성공적으로 권한 부여 코드를 받은 클라이언트는 권한 부여 코드를 사용하여 엑세스 토큰(access token)을  
+권한 서버에 추가로 요청함  
+이때 필요한 파라미터는 클라이언트 ID(client-id), 클라이언트 비밀번호(client-secret), 리다이렉트 URI, 인증 타입임
 
-### 5. CommandLineRunner를 사용하여 DB에 데이터 넣기
-**CommandLineRunner**는 애플리케이션 구동 후 특정 코드를 실행시키고 싶을 때 직접 구현하는 인터페이스  
-애플리케이션 구동 시 테스트 데이터를 함께 생성하여 데모 프로젝트를 실행/테스트하고 싶을 때 편리함  
-여러 **CommandLineRunner**를 구현하여 같은 애플리케이션 컨텍스트이 빈에 사용할 수 있음
-
-### 6. 게시글 리스트 기능 만들기
-타임리프를 사용하여 게시글 리스트 기능 만들기
-> 서버 사이드 템플릿이란 미리 정의된 HTML에 데이터를 반영하여 뷰를 만드는 작업을 서버에서 진행하고 클라이언트에 전달하는 방식  
-흔히 사용하는 JSP, 타임리프 등이 서버 사이드 템플릿 엔진이며 스프링 부트 2.0 에서 지원하는 템플릿 엔진은 타임리프, 프리마커, 무스타치, 그루비 템플릿등이 있음
-
-### 7. 타임리프 자바 8 날짜 포맷 라이브러리 추가하기
-**temporals**를 사용할 수 있게 해주는 `thymeleaf-extras-java8time` 의존성은 `spring-boot-stater-thymeleaf` 스타터에 포함되어 있음
-#### `thymeleaf-extra-java8time` 라이브러리 주요 날짜 포맷팅 함수
-##### 단일 값을 날짜 값으로 변환해주는 `format()`함수
-`${#temporals.format(temporal, 'yyyy/MM/dd HH:mm')}`
-##### Array 타입을 변환해주는 `arrayFormat()` 함수 
-`${#temporals.arrayFormat(temporalsArray, 'yyyy/MM/dd HH:mm')}`
-##### List 타입을 변환해주는 `listFormat()` 함수
-`${#temporals.listFormat(temporalsList, 'yyyy/MM/dd HH:mm')}`
-##### Set 타입을 변환해주는 `setFormat()` 함수
-`${#temporals.setFormat(temporalsSet, 'yyyy/MM/dd HH:mm')}`
-
-### 8. 페이징 처리하기 
-#### 페이징 객체를 사용해서 뷰 쪽에 구현할 기능
-- 맨 처음으로 이동 버튼
-- 이전 페이지로 이동 버튼(첫 페이지면 미노출)
-- 10페이지 단위로 이동 버튼
-- 다음 페이지로 이동 버튼(마지막 페이지면 미노출)
-- 맨 마지막 페이지로 이동 버튼
-
-### 9. 작성 폼 만들기
-`${...?}` 처럼 구문 뒤에 '?'를 붙여서 null 체크를 추가해 값이 null인 경우에는 빈값이 출력됨
-
-## 4.4 마치며
-- 스프링 부트의 **autoConfiguration** 기능을 사용해 설정을 최소화 함
-- **pageable** 인터페이스를 사용해 쉽게 페이징 데이터를 만들고 뷰로 넘겨줌
-- 타임리프에서 넘겨진 데이터를 페이징 처리하는 방법을 살펴봄
+3. 마지막으로 응답받은 엑세스 토큰을 사용하여 리소스 서버에 사용자의 데이터를 요청함
