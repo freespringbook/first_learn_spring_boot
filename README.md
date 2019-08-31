@@ -163,3 +163,63 @@ title 커뮤니티 게시판 시큐리티/OAuth2 흐름
 @enduml
 ```
 ![커뮤니티 게시판 시큐리티/OAuth2 흐름](http://bit.ly/2ZssRUz)
+
+## 5.3 스프링 부트 시큐리티 + OAuth2 의존성 설정하기
+스프링 부트 버전을 `1.5.22.RELEASE` 로 변경  
+dependencies에 아래의 내용 추가  
+```groovy
+compile('org.springframework.security.oauth:spring-security-oauth2')
+```
+
+## 5.4 스프링 부트 시큐리티 + OAuth2 구현하기 
+프로젝트를 구현하기 전 페이스북, 구글, 카카오의 개발자센터에서 '클라이언트 ID'와  
+'Secret(클라이언트 시크릿 키값, 클라이언트 보안 비밀)'을 발급
+
+### 페이스북, 구글, 카카오 개발자센터 연동
+#### 1. 페이스북 연동
+https://developer.facebook.com/apps
+
+1. 새 앱을 추가하는 버튼을 누르고 앱ID와 자신의 이메일을 입력하여 앱ID를 생성
+2. 생성된 앱 ID로 들어가서 'Facebook로그인' 선택 후 설정화면 진입
+3. '유효한 OAuth 리다이렉션 URI'를 설정
+- 스프링 부트 1.5 버전용
+    - http://localhost:8080/login/oauth2/client/facebook
+- 스프링 부트 2.0 버전용 
+    - http://localhost:8080/login/oauth2/code/facebook
+4. 메뉴 - 설정 - 기본 설정에서 앱ID와 앱 시크릿 코드 확인
+
+#### 2. 구글 연동
+https://console.cloud.google.com
+
+1. 프로젝트 생성
+2. API 및 서비스 - 사용자 인증 정보 로 이동
+3. '사용자 인증 정보 만들기'에서 'OAuth 클라이언트 ID' 선택
+4. 'OAuth 동의 화면' 제품 이름에 원하는 문구 입력
+5. 구글의 OAuth 클라이언트를 만들기 위해 애플리케이션의 유형과 리다이렉션 URI 입력
+- 스프링 부트 1.5 버전용
+    - http://localhost:8080/login/oauth2/client/facebook
+- 스프링 부트 2.0 버전용 
+    - http://localhost:8080/login/oauth2/code/facebook
+6. 완료 후 사용자 인증 정보 페이지로 이동
+7. 생성한 앱을 클릭하고 상세화면에서 '클라이언트 ID'와 '클라이언트 보안 비밀'을 사용하여 애플리케이션 연동 시작
+
+#### 3. 카카오 연동
+https://developers.kakao.com/apps
+
+1. 앱 만들기
+2. 설정 클릭
+3. 플랫폼 - 플랫폼 추가 - 웹 선택 후 도메인명 입력
+- http://localhost:8080
+4. 사용자 관리에서 로그인 동의항목 저장 후 로그인 Redirect URI 추가
+- 스프링 부트 2.0 버전용
+    - http://localhost:8080/login/oauth2/code/kakao
+5. 애플리케이션 개발 시 REST API 키 사용
+
+### 1. SNS 프로퍼티 설정 및 바인딩
+소셜 미디어 연동을 위해 필요한 기본적인 프로퍼티 정보
+- clientId: OAuth 클라이언트 사용자명으로 OAuth 공급자가 클라이언트를 식별하는 데 사용함
+- clientSecret: OAuth 클라이언트 시크릿 키값
+- accessTokenUri: 엑세스 토큰을 제공하는 OAuth의 URI
+- userAuthorizationUri: 사용자가 리소스에 접근하는 걸 승인하는 경우 리다이렉션할 URI로 소셜 미디어에 따라 필요 없는 경우도 있음
+- scope: 리소스에 대한 접근 범위를 지정하는 문자열로 쉼표로 구분하여 여러 개 지정할 수 있음
+- userInfoUri: 사용자의 개인정보 조회를 위한 URI

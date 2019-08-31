@@ -1,0 +1,36 @@
+facebook:
+  client:
+    # OAuth 클라이언트 사용자명으로 OAuth 공급자가 클라이언트를 식별하는 데 사용함
+    clientId: clientIdTest
+    # OAuth 클라이언트 시크릿 키값
+    clientSecret: clientSecretTest
+    # 엑세스 토큰을 제공하는 OAuth의 URI
+    accessTokenUri: https://graph.facebook.com/oauth/access_token
+    # 사용자가 리소스에 접근하는 걸 승인하는 경우 리다이렉션할 URI로 소셜 미디어에 따라 필요 없는 경우도 있음
+    userAuthorizationUri: https://www.facebook.com/dialog/oauth?display=popup
+    tokenName: oauth_token
+    authenticationScheme: query
+    clientAuthenticationScheme: form
+    # 리소스에 대한 접근 범위를 지정하는 문자열로 쉼표로 구분하여 여러 개 지정할 수 있음
+    scope: email
+  resource:
+    # 사용자의 개인정보 조회를 위한 URI 페이스 북은 scope로 정보를 요청하면 적용되지 않으므로 fields로 요청
+    userInfoUri: https://graph.facebook.com/me?fields=id,name,email,link
+
+google:
+  client:
+    clientId: clientIdTest
+    clientSecret: clientSecretTest
+    accessTokenUri: https://accounts.google.com/o/oauth2/token
+    userAuthorizationUri: https://accounts.google.com/o/oauth2/auth
+    scope: email, profile
+  resource:
+    userInfoUri: https://www.googleapis.com/oauth2/v2/userinfo
+
+kakao:
+  client:
+    clientId: clientIdTest
+    accessTokenUri: https://kauth.kakao.com/oauth/token
+    userAuthorizationUri: https://kauth.kakao.com/oauth/authorize
+  resource:
+    userInfoUri: https://kapi.kakao.com/v1/user/me
