@@ -49,12 +49,10 @@ public class User {
     private LocalDateTime updatedDate;
 
     @Builder
-    public User(String name, String password, String email, String principal, SocialType socialType, LocalDateTime createdDate, LocalDateTime updatedDate) {
+    public User(String name, String password, String email, LocalDateTime createdDate, LocalDateTime updatedDate) {
         this.name = name;
         this.password = password;
         this.email = email;
-        this.principal = principal;
-        this.socialType = socialType;
         this.createdDate = createdDate;
         this.updatedDate = updatedDate;
     }
