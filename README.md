@@ -226,3 +226,31 @@ https://developers.kakao.com/apps
 
 ### 2. 시큐리티 + OAuth2 설정하기
 스프링 부트 1.5 버전 시큐리티와 OAuth2를 설정
+
+## 3. 어노테이션 기반으로 User 정보 불러오기
+인증된 User의 개인정보를 저장하고 직접 User 정보를 불러오기
+보통 User와 관련된 개인정보는 세션에 저장함
+
+#### 인증 처리 후 User 정보 세션 처리
+```puml
+title 인증 처리 후 User 정보 세션 처리
+:OAuth2 인증 성공 시>
+:UserArgumentResolver(filter)]
+:supportsParameter 체크;
+-[#blue]-> Yes;
+if (세션에 User가 있는지 여부 체크) then (Yes)
+-[#blue]-> 
+else (No)
+:User 객체 생성 후 권한 부여]
+->
+:User 세션 저장]
+endif
+-[#gray,bold]->
+:User 파라미터 바인딩;
+```
+![인증 처리 후 User 정보 세션 처리](bit.ly/2ZsyIKg)
+
+
+인증 프로세서가 최종까지 완료되면 설정된 성공 URL로 이동함
+
+인증된 User 정보를 세션에 저장해주는 기능 생성
