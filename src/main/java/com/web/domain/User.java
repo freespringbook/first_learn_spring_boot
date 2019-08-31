@@ -1,5 +1,6 @@
 package com.web.domain;
 
+import com.web.domain.enums.SocialType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -31,6 +32,15 @@ public class User {
 
     @Column
     private String email;
+
+    /* OAuth2 인증으로 제공받는 키값 */
+    @Column
+    private String principal;
+
+    /* 어떤 소셜 미디어로 인증받았는지 여부 */
+    @Column
+    @Enumerated(EnumType.STRING)
+    private SocialType socialType;
 
     @Column
     private LocalDateTime createdDate;
