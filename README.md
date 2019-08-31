@@ -223,3 +223,6 @@ https://developers.kakao.com/apps
 - userAuthorizationUri: 사용자가 리소스에 접근하는 걸 승인하는 경우 리다이렉션할 URI로 소셜 미디어에 따라 필요 없는 경우도 있음
 - scope: 리소스에 대한 접근 범위를 지정하는 문자열로 쉼표로 구분하여 여러 개 지정할 수 있음
 - userInfoUri: 사용자의 개인정보 조회를 위한 URI
+
+### 2. 시큐리티 + OAuth2 설정하기
+스프링 부트 1.5 버전 시큐리티와 OAuth2를 설정

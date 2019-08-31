@@ -10,7 +10,6 @@ import lombok.AllArgsConstructor;
  * 소셜 미디어의 타입정보를 나타내는 enum 객체
  * enum을 권한 생성 로직을 공통 코드로 처리하여 중복 코드를 줄임
  */
-@AllArgsConstructor
 public enum  SocialType {
     FACEBOOK("facebook"),
     GOOGLE("google"),
@@ -18,6 +17,10 @@ public enum  SocialType {
 
     private final String ROLE_PREFIX = "ROLE_";
     private String name;
+
+    SocialType(String name) {
+        this.name = name;
+    }
 
     /**
      * ROLE_* 형식으로 소셜 미디어의 권한명 생성
@@ -27,7 +30,7 @@ public enum  SocialType {
         return ROLE_PREFIX + name.toUpperCase();
     }
 
-    public String getName() {
+    public String getValue() {
         return name;
     }
 
