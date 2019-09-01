@@ -210,3 +210,12 @@ rep -> client:응답
 @enduml
 ```
 ![스프링 부트 데이터 레스트를 활용하는 REST API 애플리케이션 설계](/images/datarest.png)
+
+## 6.3 스프링 부트 MVC 패턴으로 REST API 구현하기
+1. 클라이언트와 REST API의 통신을 위한 클라이언트 쪽 스크립트 코드 추가
+2. REST API 개발 환경 설정
+3. CORS 허용 및 시큐리티 설정
+4. 생성, 수정, 삭제 기능 구현
+
+### 1. 준비하기
+1. 커뮤니티 게시판의 /board/form.html Ajax 통신용 스크립트 추가
