@@ -1,382 +1,212 @@
 # 처음 배우는 스프링 부트2
-## 5. 스프링 부트 시큐리티 + OAuth2
-스프링 부트 프레임워크는 인증과 권한에 관련된 강력한 기능인 스프링 부트 시큐리티를 제공함
-스프링 부트 시큐리티는 스프링 시큐리티의 번거로운 설정을 간소화 시켜주는 래핑 프레임워크
+##  6. 스프링 부트 데이터 레스트
+REST(Representational State Transfer)는 웹의 장점을 극대화하는 통신 네트워크 아키텍처 이며  
+REST의 구현 원칙을 제대로 지키는 시스템을 RESTful 이라고 함
 
-## 5.1 배경지식 소개
-스프링 부트 시큐리티는 스프링 시큐리티에 스타터를 제공해 더 빠른 설정을 지원하는 프로젝트임
+## 6.1 배경지식
+### 1. REST 소개
+REST는 웹과 같은 분산 하이퍼미디어 시스템에서 사용하는 통신 네트워크 아키텍처로 네트워크 아키텍처의 원리 모음
 
-### 1. 스프링 부트 시큐리티
-스프링 부트 시큐리티에서 가장 중요한 개념
-#### 인증(Authentication)
-사용자(클라이언트)가 애플리케이션의 특정 동작에 관하여 허락(인증)된 사용자인지 확인하는 절차
-웹사이트 로그인을 인증이라 생각하면 됨
+웹은 전송 방식으로 HTTP를 식벽 방법으로 URI를 사용
 
-#### 권한부여(Authorization)
-데이터나 프로그램 등의 특정 자원이나 서비스에 접근할 수 있는 권한을 허용하는 것
-예를 들어 A는 VIP 회원이고, B는 일반 회원이라면 두 회원의 권한이 다르게 부여됨
+HTTP는 웹에서 GET, POST, PUT, DELETE 등의 메서드를 사용하여 정보를 주고받는 프로토콜
 
-#### 그외 인증방식
-- 크리덴셜(Credential) 기반 인증 방식: 사용자명(Principle)과 비밀번호(Credential)로 인증하는 전통적인 인증 방식
-- 이중 인증 방식: OTP와 같이 추가적인 인증 방식을 도입에 한번에 2가지 방법으로 인증하는 방식
-- OAuth2 인증 방식: 소셜 미디어를 사용해 편리하게 인증하는 방식
+REST는 HTTP와 URI의 단순하고 간결한 장점을 계승한 네트워크 아키텍처
 
-### 2. OAuth2
-OAuth는 토큰을 사용한 범용적인 방법의 인증을 제공하는 표준 인증 프로토콜
-OAuth2는 OAuth 프로토콜의 버전 2 서드파티(3rd party)를 위한 범용적인 인증 표준
+#### REST의 목적
+- 구성요소 상호작용의 규모 확장성
+- 인터페이스의 범용성
+- 구성요소의 독립적인 배포
+- 중간적 구성요소를 이용한 응답 지연 감소, 보안 강화, 레거시 시스템 인캡슐레이션
 
-#### OAuth2에서 제공하는 승인 타입 4가지
-##### 권한 부여 코드 승인 타입(Authorization Code Grant Type)
-클라이언트가 다른 사용자 대신 특정 리소스에 접근을 요청할 때 사용됨
-리소스 접근을 위한 사용자명과 비밀번호, 권한 서버에 요청해서 받은 권한 코드를 함께 활용하여 리소스에  
-대한 엑세스 토큰을 받으면 이를 인증에 이용하는 방식
+### 2. RESTful 제약 조건
+##### 클라이언트-서버(client-server)
+이 제약 조건의 기본 원칙은 관심사의 명확한 분리  
+관심사의 명확한 분리가 선행되면 서버의 구성요소가 단순화되고 확장성이 향상되어 여러 플랫폼을 지원할 수 있음
 
-페이스북, 구글, 카카오 등의 소셜 미디어 들이 웹 서버 형태의 클라이언트를 이 방식으로 지원  
-웹 서버에서 장기 엑세스 토큰(long-lived access token)을 사용하여 사용자 인증을 처리
+##### 무상태성(stateless)
+서버에 클라이언트의 상태 정보를 저장하지 않는 것을 말함  
+단순히 들어오는 요청만 처리하여 구현을 더 단순화함  
+클라이언트의 모든 요청은 서버가 요청을 알아듣는 데 필요한 모든 정보를 담고 있어야 함
 
-##### 암시적 승인 타입(Implicit Grant Type)
-권한 부여 코드 승인 타입과 다르게 권한 코드 교환 단계 없이 엑세스 토큰을 즉시 반환받아 이를 인증에 이용하는 방식
+##### 캐시 기능(cacheable)
+클라이언트의 응답을 캐시할 수 있어야 함  
+앞에서 HTTP의 장점을 그대로 계승한 아키텍처가 REST라고 함  
+HTTP의 캐시 기능도 적용할 수 있음
 
-##### 리소스 소유자 암호 자격 증명 승인 타입(Resource Owner Password Credentials Grant Type)
-클라이언트가 암호를 사용하여 엑세스 토큰에 대한 사용자의 자격 증명을 교환하는 방식
+##### 계층화 시스템(layered system)
+서버는 중개 서버(게이트웨이, 프록시)나 로드 밸런싱, 공유 캐시 등의 기능을 사용하여 확장성 있는 시스템을 구성할 수 있음
 
-##### 클라이언트 자격 증명 승인 타입(Client Credentials Grant Type)
-클라이언트가 컨텍스트 외부에서 엑세스 토큰을 얻어 특정 리소스에 접근을 요청할 때 사용하는 방식 
+##### 코드 온 디맨드(code on demand)
+클라이언트는 서버에서 자바 애플릿, 자바스크립트 실행 코드를 전송받아 기능을 일시적으로 확장할 수 있음  
+이 제약 조건은 선택 가능함
 
-```puml
-header Authorization Code Grant Type
-title 권한 부여 코드 승인 타입 시퀀스 다이어그램
+##### 인터페이스 일관성(uniform interface)
+URI(통합 자원 식별자)로 지정된 리소스에 균일하고 통일된 인터페이스를 제공함  
+아키텍처를 단순하게 분리하여 독립적으로 만들 수 있음
 
-participant 리소스_주인
-클라이언트 -> 권한서버: 권한 부여 코드 요청
+#### 인터페이스 일관성
+인터페이스 일관성은 세부 원칙을 갖고 있음  
+인터페이스 일관성이 잘 지켜졌는지에 따라 REST를 제대로 사용했는지 판단할 수 있음
 
-activate 권한서버
-rnote over 권한서버
-  client_id, redirect_url,
-  response_type=code의 파라미터로 
-  요청하면 코드값 반환
-end rnote
-리소스_주인 -> 권한서버: 로그인
-권한서버 --> 클라이언트: 권한 부여 코드 응답
-deactivate 권한서버
-
-클라이언트 -> 권한서버: 엑세스 토큰으로 교환 요청
-activate 권한서버
-rnote over 권한서버
-  client_id, client_secret, redirect_url,
-  grant_type=authorization_code를 사용하여 권한 부여 코드 반환
-end rnote
-클라이언트 <-- 권한서버: 엑세스 토큰 응답
-deactivate 권한서버
-
-loop 
-  클라이언트 -> 리소스_서버: 엑세스 토큰을 사용하여 API 호출
-  activate 리소스_서버
-  클라이언트 <-- 리소스_서버: 요청한 데이터 응답
-  deactivate 리소스_서버
-end
+인터페이스 일관성의 4가지 프로퍼티
+- 자원식별  
 ```
-![권한 부여 코드 승인 타입 시퀀스 다이어그램](http://bit.ly/2PlTpmz)
-
-- 리소스 주인(resource owner): 인증이 필요한 사용자
-- 클라이언트(client): 웹사이트
-- 권한 서버(authorization server): 페이스북/구글/카카오 서버
-- 리소스 서버(resource server): 페이스북/구글/카카오 서버
-
-1. 클라이언트가 파라미터로 클라이언트 ID, 리다이렉트 URI, 응답 타입을 code로 지정하여 권한서버에 전달  
-정상적으로 인증이 되면 권한 부여 코드를 클라이언트에 보냄(응답 타입은 code, token이 사용 가능  
-응답 타입이 token일 때가 암시적 승인 타입에 해당함)
-
-2. 성공적으로 권한 부여 코드를 받은 클라이언트는 권한 부여 코드를 사용하여 엑세스 토큰(access token)을  
-권한 서버에 추가로 요청함  
-이때 필요한 파라미터는 클라이언트 ID(client-id), 클라이언트 비밀번호(client-secret), 리다이렉트 URI, 인증 타입임
-
-3. 마지막으로 응답받은 엑세스 토큰을 사용하여 리소스 서버에 사용자의 데이터를 요청함
-
-> 엑세스 토큰  
-로그인 세션에 대한 보안 자격을 증명하는 식별 코드
-사용자, 사용자 그룹, 사용자 권한 및 경우에 따라 특정 API 사용을 보증하는 역할을 함
-
-## 5.2 스프링 부트 시큐리티 + OAuth2 설계하기
-```puml
-@startuml
-title 스프링 시큐리티 + OAuth2 적용 흐름도
-:사용자;
-:Tomcat 8080]
-floating note left: 스프링 세션
-if(스프링 시큐리티 컨텍스트 세션이 있는가?) then (Yes)
-  -[#blue]-> Yes;
-  :요청한 URL 접근]
-  stop
-else (No)
-  if(가입된 사용자인가?) then (Yes)
-  -[#blue]->
-  :요청한 URL 접근]
-  stop
-  else (No)
-    :소셜에 따라 User 객체 생성]
-    split
-      :페이스북]
-    split again
-      :구글]
-    split again
-      :카카오]
-    end split
-    :사용자 지정;
-    stop
-  endif
-endif
-  
-@enduml
+http://localhost:8080/resource/1
 ```
-![스프링 시큐리티 + OAuth2 적용 흐름도](http://bit.ly/30J9Qun)
-1. 사용자가 애플리케이션에 접속하면 해당 사용자에 대해 이전 로그인 정보(세션)의 유무를 체크
-
-2. 세션이 있으면 그대로 세션을 사용하고, 없으면 OAuth2 인증 과정을 거치게 됨
-
-3. 이메일을 키값으로 사용하여 이미 가입된 사용자인지 체크  
-이미 가입된 사용자라면 등록된 정보를 반환하여 요청한 URL로의 접근을 허용하고, 아니라면 새롭게 User 정보를 저장하는 과정을 진행
-
-4. 각 소셜 미디어에서 제공하는 User 정보가 다르기 때문에 소셜 미디어에 따라 User 객체를 생성한 후 DB에 저장함  
-
-**! 세션이 있거나 성공한 사용자는 요청한 URL로의 접근을 허용함**
-
-
-##### 소셜 미디어 계정으로 커뮤니티 게시판에 로그인하는 FLOW
-```puml
-@startuml
-title 커뮤니티 게시판 시큐리티/OAuth2 흐름
-
-(권한별 페이지 구성) as (authorization)
-
-(페이스북) -down- (authorization)
-(구글) -down- (authorization)
-(카카오) -down- (authorization)
-(authorization) -right- (권한 설정)
-(권한 설정) -right- (커뮤니티)
-(세션 설정) -down- (커뮤니티)
-(커뮤니티) -right- (OAuth2 인증)
-(OAuth2 인증) -down- (페이스북 )
-(OAuth2 인증) -down- (구글 )
-(OAuth2 인증) -down- (카카오 )
-
-@enduml
+- 메시지를 통한 리소스 조작
 ```
-![커뮤니티 게시판 시큐리티/OAuth2 흐름](http://bit.ly/2ZssRUz)
-
-## 5.3 스프링 부트 시큐리티 + OAuth2 의존성 설정하기
-스프링 부트 버전을 `1.5.22.RELEASE` 로 변경  
-dependencies에 아래의 내용 추가  
-```groovy
-compile('org.springframework.security.oauth:spring-security-oauth2')
+http://localhost:8080/resource/1
+content-type: application/json
 ```
 
-## 5.4 스프링 부트 시큐리티 + OAuth2 구현하기 
-프로젝트를 구현하기 전 페이스북, 구글, 카카오의 개발자센터에서 '클라이언트 ID'와  
-'Secret(클라이언트 시크릿 키값, 클라이언트 보안 비밀)'을 발급
-
-### 페이스북, 구글, 카카오 개발자센터 연동
-#### 1. 페이스북 연동
-https://developer.facebook.com/apps
-
-1. 새 앱을 추가하는 버튼을 누르고 앱ID와 자신의 이메일을 입력하여 앱ID를 생성
-2. 생성된 앱 ID로 들어가서 'Facebook로그인' 선택 후 설정화면 진입
-3. '유효한 OAuth 리다이렉션 URI'를 설정
-- 스프링 부트 1.5 버전용
-    - http://localhost:8080/login/oauth2/client/facebook
-- 스프링 부트 2.0 버전용 
-    - http://localhost:8080/login/oauth2/code/facebook
-4. 메뉴 - 설정 - 기본 설정에서 앱ID와 앱 시크릿 코드 확인
-
-#### 2. 구글 연동
-https://console.cloud.google.com
-
-1. 프로젝트 생성
-2. API 및 서비스 - 사용자 인증 정보 로 이동
-3. '사용자 인증 정보 만들기'에서 'OAuth 클라이언트 ID' 선택
-4. 'OAuth 동의 화면' 제품 이름에 원하는 문구 입력
-5. 구글의 OAuth 클라이언트를 만들기 위해 애플리케이션의 유형과 리다이렉션 URI 입력
-- 스프링 부트 1.5 버전용
-    - http://localhost:8080/login/oauth2/client/facebook
-- 스프링 부트 2.0 버전용 
-    - http://localhost:8080/login/oauth2/code/facebook
-6. 완료 후 사용자 인증 정보 페이지로 이동
-7. 생성한 앱을 클릭하고 상세화면에서 '클라이언트 ID'와 '클라이언트 보안 비밀'을 사용하여 애플리케이션 연동 시작
-
-#### 3. 카카오 연동
-https://developers.kakao.com/apps
-
-1. 앱 만들기
-2. 설정 클릭
-3. 플랫폼 - 플랫폼 추가 - 웹 선택 후 도메인명 입력
-- http://localhost:8080
-4. 사용자 관리에서 로그인 동의항목 저장 후 로그인 Redirect URI 추가
-- 스프링 부트 2.0 버전용
-    - http://localhost:8080/login/oauth2/code/kakao
-5. 애플리케이션 개발 시 REST API 키 사용
-
-### 1. SNS 프로퍼티 설정 및 바인딩
-소셜 미디어 연동을 위해 필요한 기본적인 프로퍼티 정보
-- clientId: OAuth 클라이언트 사용자명으로 OAuth 공급자가 클라이언트를 식별하는 데 사용함
-- clientSecret: OAuth 클라이언트 시크릿 키값
-- accessTokenUri: 엑세스 토큰을 제공하는 OAuth의 URI
-- userAuthorizationUri: 사용자가 리소스에 접근하는 걸 승인하는 경우 리다이렉션할 URI로 소셜 미디어에 따라 필요 없는 경우도 있음
-- scope: 리소스에 대한 접근 범위를 지정하는 문자열로 쉼표로 구분하여 여러 개 지정할 수 있음
-- userInfoUri: 사용자의 개인정보 조회를 위한 URI
-
-### 2. 시큐리티 + OAuth2 설정하기
-스프링 부트 1.5 버전 시큐리티와 OAuth2를 설정
-
-### 3. 어노테이션 기반으로 User 정보 불러오기
-인증된 User의 개인정보를 저장하고 직접 User 정보를 불러오기
-보통 User와 관련된 개인정보는 세션에 저장함
-
-#### 인증 처리 후 User 정보 세션 처리
-```puml
-title 인증 처리 후 User 정보 세션 처리
-:OAuth2 인증 성공 시>
-:UserArgumentResolver(filter)]
-:supportsParameter 체크;
--[#blue]-> Yes;
-if (세션에 User가 있는지 여부 체크) then (Yes)
--[#blue]-> 
-else (No)
-:User 객체 생성 후 권한 부여]
-->
-:User 세션 저장]
-endif
--[#gray,bold]->
-:User 파라미터 바인딩;
+- 자기 서술적 메시지
 ```
-![인증 처리 후 User 정보 세션 처리](bit.ly/2ZsyIKg)
-
-
-인증 프로세서가 최종까지 완료되면 설정된 성공 URL로 이동함
-
-AOP를 이용하여 특정한 파라미터 형식을 취해 병렬적으로 User 객체에 인증된 정보를 가져올 수 있음
-일단 AOP로직을 만들어놓으면 User 정보를 가져오는 방법에 신경 쓸 필요가 없게 됨
-
-#### AOP 구현방법
-- 직접 AOP 로직을 작성하는 방법
-- 스프링의 전략 인터페이스 중 하나인 `HandlerMethodArgumentResolver`를 사용하는 방법
-
-##### HandlerMethodArgumentResolver
-전략 패턴의 일종으로 컨트롤러 메서드에서 특 조건에 해당하는 파라미터가 있으면  
-생성한 로직을 처리한 후 해당 파라미터에 바인딩해주는 전략 인터페이스
-
-두 메서드를 제공
-- `supportsParameter()` 메서드: `HandlerMethodArgumentResolver`가 해당하는 파라미터를 지원할지 여부를 반환함  
-`true`를 반환하면 `resolveArgument` 메서드가 수행됨
-- `resolveArgument()` 메서드: 파라미터의 인잣값에 대한 정보를 바탕으로 실제 객체를 생성하여 해당 파라미터 객체에 바인딩함
-
-> 특정 전략을 인터페이스로 만들고 이를 여러 전략 객체로 구현함  
-그리고 현재 클래스 레벨에서 전략 인터페이스를 의존하도록 함  
-이런 식으로 느슨하게 연결된 전략 클래스를 찾아 의존하도록 하는 방식이 전략 패턴임
-
-1. 인증된 User 정보를 세션에 저장해주는 기능 생성
-2. 기존 로직을 어노테이션을 사용하여 축소
-3. HandlerMethodArgumentResolver 인터페이스를 구현한 UserArgumentResolve 클래스 생성
-4. UserArgumentResolver 필터에서 동작할 수 있도록 등록하기
-5. 소셜 미디어 인증용 SocialUser 어노테이션 생성
-6. supportsParameter() 메서드에 해당하는 어노테이션 타입이 명시되어 있는지 확읺하는 로직 추가
-7. 세션에서 User 객체를 가져오는 resolveArgument() 메서드 구현
-8. 인증된 소셜 미디어 회원의 정보를 가져와 User 객체 만들기
-
-### 4. 인증 동작 확인하기
-
-1. 로그인 화면 구성
-2. 인증 확인
-
-### 5. 페이지 권한 분리하기
-페이스북, 구글 카카오의 사용자 권한에 따라 접속할 수 있는 페이지를 제한
-
-#### 1. 권한 설정 추가
-```java
-// 소셜 미디어용 경로 지정
-.antMatchers("/facebook")
-    // 메서드의 파라미터로 원하는 권한을 전달하여 해당 권한을 지닌 사용자만 경로를 사용할 수 있도록 통제
-    .hasAuthority(FACEBOOK.getRoleType())
-.antMatchers("/google").hasAuthority(GOOGLE.getRoleType())
-.antMatchers("/kakao").hasAuthority(KAKAO.getRoleType())
+GET http://localhost:8080/resource/1
+content-type: application/json
 ```
 
-#### 2. 권한에 따른 페이지 구성
-```java
-public class AuthorityTestController {
+- 애플리케이션 상태에 대한 엔진으로서의 하이퍼미디어(hypermedia as the engine of application state.HATEOAS)  
+HATEOAS는 클라이언트에 응답할 때 단순히 결과 데이터만 제공해주기보다는 URI를 함께 제공해야 한다는 원칙  
+하이퍼텍스트 링크처림 관련된 리소스 정보를 포함한다
+    - 클라이언트는 관련된 특정 동작에 따라 탐색할만한 URI 값을 알 수 있음  
+    URI는 resource까지 포함하므로 더 명확하며 예측 가능하다
+    - 키값이 변하지 않는 한 URI가 변경되더라도 동적으로 사용할 수 있다  
+    따라서 서버쪽 코드가 변하더라도 클라이언트 코드를 따로 수정할 필요가 없다
 
-    @GetMapping("/facebook")
-    public String facebook() {
-        return "facebook";
-    }
+REST의 제약 조건들을 제대로 지키면서 REST 아키텍처를 만드는 것을 **RESTFul** 이라고 함
 
-    @GetMapping("/google")
-    public String google() {
-        return "google";
-    }
+### 3. REST API 설계하기
+서버 한 대가 여러 클라이언트에 대응하려면 REST API가 필요함  
+REST API는 다음과 같이 구성해야 함
+- 자원(resource): URI
+- 행위(verb): HTTP 메서드
+- 표현(representations): 리소스에 대한 표현(HTTP Message Body)
 
-    @GetMapping("/kakao")
-    public String kakao() {
-        return "kakao";
-    }
+#### URI 설계
+URI는 웹에 있는 자원의 이름과 위치를 식별함  
+URL은 URI의 하위 개념  
+URL이 리소스를 가져오는 방법에 대한 위치라면 URI는 문자열을 식별하기 위한 표준
 
+URI는 명사를 사용해야 하며 동사를 피해야 한다  
+동사를 표현할 때는 HTTP 메서드인 GET, POST, PUT, DELETE 등으로 다음과 같이 대체해야 함
+```
+GET http://localhost:8080/api/books
+content-type: application/json
+```
+
+#### 복수형을 사용하라
+URI에서는 명사에 단수형보다는 복수형을 사용해야 함  
+/book도 물론 명사고 사용 가능하지만 /books로 리소스를 표현하면 컬렉션(collection)으로 명확하게 표현할 수 있어  
+확장성 측면에서 더 좋음
+```
+{
+    books: [
+        {
+            book: ...
+        },
+        {
+            book: ...
+        },
+        {
+            book: ...
+        },
+    ]
 }
 ```
 
-권한이 없으면 403 AccessDenied Exception 이 발생
-
-## 5.5 스프링 부트 2.0 기반의 OAuth2 설정하기
-### 1. 스프링 부트 2.0 버전으로 의존성 업그레이드
-기존에는 `spring-security-oauth2`만 설정해주어도 OAuth2 관련 모든 설정이 끝났지만 2.0 부터는 설정이 세분화 됨  
-기본적인 OAuth2 인증 관련 객체들이 시큐리티로 이전됨
-
-2.0에서는 클라이언트 자동 인증 설정을 위해 `org.springframework.security:spring-security-oauth2-client`를 추가함
-2.0에서 JWT(JSON Web Tokens)와 관련한 권한을 안전하게 전송하기 위한 프레임워크인 JOSE(Javascript Object Signing and Encryption)가 추가됨
-
-JWT에는 자신의 리소스에 접근할 수 있는 권한 정보가 들어있는데 JOSE는 JWT의 암호화/복호화 및 일정한 기능을 제공함
-
-2.0부터는 Thymeleaf의 java8time 설정이 포함되어있음
-
-### 2. 스프링 부트 2.0 방식의 OAuth2 인증 재설정
-2.0에서 불필요한 객체 삭제 
-- ClientResources.java
-- UserTokenService.java
-
-구글, 페이스북에 대한 기본 정보는 스프링 부트 시큐리티 OAuth2 API에서 제공하므로  
-단지 시큐리티 설정에서 oauth2Login()만 추가로 설정하고  
-ID와 Secret만 등록해주면 됨 
-
-2.0 방식으로 OAuth2 인증 재설정
-1. 소셜별 ID, Secret 정보 입력
-```groovy
-spring:
-  security:
-    oauth2:
-      client:
-        registration:
-          google:
-            client-id:
-            client-secret:
-          facebook:
-            client-id:
-            client-secret:
+컬렉션으로 URI를 사용할 경우 컬렉션을 한번 더 감싼 중첩(nested) 형식으로 사용하는 것이 좋음  
+중첩할 경우 아래와 같이 JSON 형태로 _embedded 안에 컬렉션 데이터를 넣어서 반환하면 됨   
 ```
-2. 카카오 정보를 담은 CustomOAuth2Provider 객체 생성 후 정보 입력
-```groovy
-custom:
-  oauth2:
-    kakao:
-      client-id:
+{
+    _embedded: [
+        {
+            books: ...
+        },
+        {
+            stores: ...
+        },
+        {...}
+    ]
+}
+```
+중첩된 형태로 _embedded 내부에 기존 컬렉션의 키값이 유지되게 보낼 경우 서버의 API 스펙이 변경되더라도  
+클라이언트는 따로 코드를 수정할 필요가 없음
+
+#### 행위 설계
+| Resource | GET(read)          | POST(create)   | PUT(update)        | DELETE(delete)     |
+| -------- | ------------------ | -------------- | :----------------- | ------------------ |
+| /books   | book 목록 보기     | 해당 book 추가 | -                  | -                  |
+| /books/1 | ID가 1인 book 보기 | -              | ID가 1인 book 수정 | ID가 1인 book 삭제 |
+
+/books 자체가 복수의 book을 의미하므로 books를 게시판에 표현할 때 페이징을 처리하는 값을 추가로 제공할 수도 있음  
+추가 값으로 페이지, 크기, 정렬 등의 파라미터를 지정할 수 있음  
+아래와 같이 JPA의 Pageable의 프로퍼티 값을 그대로 사용할 수 있음
+page, size, sort 파라미터를 따로 지정하지 않으면 서버에서 기본으로 설정한 값으로 반환됨
+```
+GET http://localhost:8080/api/books?page=0&size=10&sort=desc
+content-type: application/json
 ```
 
-3. 변경된 시큐리티 + OAuth2 설정
-4. 카카오 로그인 연동을 위한 설정 코드 추가
-5. 요청 성공 시 URI 변경
-    - '/loginSuccess'
-6. 요청 스크립트 코드 변경
-    - '/login' -> '/oauth2/authorization' 
-7. UserArgumentResolver 클래스에 User 정보를 받아오는 부분 추가
+## 6.2 설계하기
+REST API를 MVC 패턴을 이용한 방법과 스프링 부트 데이터 레스트를 사용하는 방법으로 구현함
+```plantuml
+@startditaa
+인증 처리 후 User 정보 세션 처리
 
-## 5.6 마치며
-- 인증과 권한 부여
-- 스프링 부트에서 OAuth2 라이브러리르 사용하여 프로퍼티로 필요한 정보를 쉽게 바인딩하는 방법
-- 전략 패턴을 사용하여 User의 세션 정보를 가져오고 저장 및 권한 처리 등을 해주는 HandlerMethodArgumentResolver 인터페이스르 따로 구현함 
+
++---------+ POST, PUT, DELETE   +---------+
+|         |                     |         |
+|  Client +-------request------>|REST API |
+|         |<------response------+         |
++---------+                     +---------+
+     ^	                             ^
+     |	                             |
+     |          /--------\           |
+     |          |cAAA    |           |
+     |          |  Data  |           |
+     +data------+  Base  +-------data+
+                |     {s}|
+                \---+----/
+@endditaa
+```
+![커뮤니티 게시판과 연동되는 REST API 설게](/images/restapiarchitecture.png)
+- 클라이언트와 DB가 기존에는 직접 데이터를 주고 받았음
+- REST API를 사용하면 클라이언트와 DB 사이를 REST API가 중계하게 됨
+
+REST API에서 노출하고 싶은 데이터만 노출할 수 있으며 데이터를 캐시하여 성능도 향상되는 구조까지 가질 수 있음  
+따라서 기존에 직접 데이터를 주고받던 과정인 클라이언트와 DB가 데이터를 주고 받던 관계는 사라짐
+
+### 1. MVC 패턴을 활용하는 방법
+```plantuml
+@startuml
+actor client
+agent controller
+agent service
+agent repository
+database DB
+client -> controller:요청
+controller -> service
+service -> repository
+repository -> DB
+DB -> repository
+repository -> service
+service -> controller
+controller -> client:응답
+@enduml
+```
+![MVC 패턴을 활용한 REST API 애플리케이션 설계](/images/mvcpattern.png)
+
+### 2. 스프링 부트 데이터 레스트를 활용하는 방법
+```plantuml
+@startuml
+actor client
+agent "REST repository" as rep
+database DB
+client -> rep :요청
+rep -> DB
+DB -> rep
+rep -> client:응답
+@enduml
+```
+![스프링 부트 데이터 레스트를 활용하는 REST API 애플리케이션 설계](/images/datarest.png)
