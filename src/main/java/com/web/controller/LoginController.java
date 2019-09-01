@@ -2,16 +2,8 @@ package com.web.controller;
 
 import com.web.annotation.SocialUser;
 import com.web.domain.User;
-import com.web.domain.enums.SocialType;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import javax.servlet.http.HttpSession;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Created by freejava1191@gmail.com on 2019-09-01
@@ -33,7 +25,8 @@ public class LoginController {
      * @param user
      * @return
      */
-    @GetMapping(value = "/{facebook|google|kakao}/complete")
+    // @GetMapping(value = "/{facebook|google|kakao}/complete")
+    @GetMapping(value = "/loginSuccess") // 로그인 성공 URL 잠시 변경
     public String loginComplete(@SocialUser User user) { // 간단한 방법으로 인증된 User 객체를 가져옴
         return "redirect:/board/list";
     }

@@ -35,9 +35,7 @@ public class BoardService {
    }
 
    public Board findBoardByIdx(Long idx) {
-        // return boardRepository.findById(idx).orElse(new Board());
-        // 스프링 부트 1.5 버전 대응 로직
-        return boardRepository.findOne(idx);
+        return boardRepository.findById(idx).orElse(new Board());
    }
 
 }

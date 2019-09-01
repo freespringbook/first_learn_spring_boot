@@ -9,40 +9,17 @@ spring:
   devtools:
     livereload:
       enabled: true
-
-facebook:
-  client:
-    # OAuth 클라이언트 사용자명으로 OAuth 공급자가 클라이언트를 식별하는 데 사용함
-    clientId: 388438261869931
-    # OAuth 클라이언트 시크릿 키값
-    clientSecret: 8424ab50def891c7af02663d494f9c89
-    # 엑세스 토큰을 제공하는 OAuth의 URI
-    accessTokenUri: https://graph.facebook.com/oauth/access_token
-    # 사용자가 리소스에 접근하는 걸 승인하는 경우 리다이렉션할 URI로 소셜 미디어에 따라 필요 없는 경우도 있음
-    userAuthorizationUri: https://www.facebook.com/dialog/oauth?display=popup
-    tokenName: oauth_token
-    authenticationScheme: query
-    clientAuthenticationScheme: form
-    # 리소스에 대한 접근 범위를 지정하는 문자열로 쉼표로 구분하여 여러 개 지정할 수 있음
-    scope: email
-  resource:
-    # 사용자의 개인정보 조회를 위한 URI 페이스 북은 scope로 정보를 요청하면 적용되지 않으므로 fields로 요청
-    userInfoUri: https://graph.facebook.com/me?fields=id,name,email,link
-
-google:
-  client:
-    clientId: 330336014683-7t8mnp4th0q1mbofvqte5l9mvts8qn8f.apps.googleusercontent.com
-    clientSecret: 2VaTZHX1xftvMH1dOYAz7gDP
-    accessTokenUri: https://www.googleapis.com/oauth2/v4/token
-    userAuthorizationUri: https://accounts.google.com/o/oauth2/v2/auth
-    scope: email, profile
-  resource:
-    userInfoUri: https://www.googleapis.com/oauth2/v2/userinfo
-
-kakao:
-  client:
-    clientId: df074580c30a655d8989aee85261117d
-    accessTokenUri: https://kauth.kakao.com/oauth/token
-    userAuthorizationUri: https://kauth.kakao.com/oauth/authorize
-  resource:
-    userInfoUri: https://kapi.kakao.com/v1/user/me
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 
+            client-secret:
+          facebook:
+            client-id:
+            client-secret:
+custom:
+        oauth2:
+          kakao:
+            client-id:

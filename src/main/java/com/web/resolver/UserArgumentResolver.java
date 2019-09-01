@@ -9,7 +9,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.oauth2.provider.OAuth2Authentication;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -68,11 +68,15 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
     private User getUser(User user, HttpSession session) {
         if(user == null) {
             try {
-                // SecurityContextHolder를 사용해 인증된 OAuth2Authentication 객체를 가져옴
-                OAuth2Authentication authentication = (OAuth2Authentication) SecurityContextHolder.getContext().getAuthentication();
-                // getDetails() 메서드를 사용해 사용자 개인정보를 Map 타입으로 매핑함
-                Map<String, Object> map = (HashMap<String, Object>) authentication.getUserAuthentication().getDetails();
-                // 어떤 소셜 미디어로 인증 받았는지 불러옴 이전에 넣은 권한이 하나라서 배열의 첫 번째 값만 불러오도록 함
+                // 2.0 버전에서는 기존의 OAuth2Authentication이 아닌 엑세스 토큰까지 제공한다는 의미에서 OAuth2AuthenticationToken을 지원함
+                // SecurityContextHolder에서 OAuth2AuthenticationToken을 가져옴
+                OAuth2AuthenticationToken authentication = (OAuth2AuthenticationToken) SecurityContextHolder.getContext().getAuthentication();
+                // 개인정보를 getAttributes() 메서드를 사용해 Map 타입으로 불러옴
+                // 기존에는 Map<String, String> 이었다면 이제는 Map<String, Object>를 제공하게끔 변경되었으므로 Map 객체를 사용하는 부분을 모두
+                // Map<String, Object> 로 변경함
+                Map<String, Object> map = authentication.getPrincipal().getAttributes();
+                // 예전에는 getAuthorities() 메서드로 권한을 불러와서 인증된 소셜 미디어가 어디인지 알았다면 이제는
+                // getAuthorizedClientRegistrationId() 메서드로 파악할 수 있음
                 User convertUser = convertUser(String.valueOf(authentication.getAuthorities().toArray()[0]), map);
                 // 이메일을 사용해 이미 DB에 저장된 사용자라면 바로 User 객체를 반환 그렇지 않으면 저장
                 user = userRepository.findByEmail(convertUser.getEmail());
@@ -143,7 +147,7 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
      * @param authentication
      * @param map
      */
-    private void selfRoleIfNotSame(User user, OAuth2Authentication authentication, Map<String, Object> map) {
+    private void selfRoleIfNotSame(User user, OAuth2AuthenticationToken authentication, Map<String, Object> map) {
         if(!authentication.getAuthorities().contains(new SimpleGrantedAuthority(user.getSocialType().getRoleType()))) {
             SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(map, "N/A", AuthorityUtils.createAuthorityList(user.getSocialType().getRoleType())));
         }

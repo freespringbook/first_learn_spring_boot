@@ -335,3 +335,43 @@ public class AuthorityTestController {
 JWT에는 자신의 리소스에 접근할 수 있는 권한 정보가 들어있는데 JOSE는 JWT의 암호화/복호화 및 일정한 기능을 제공함
 
 2.0부터는 Thymeleaf의 java8time 설정이 포함되어있음
+
+### 2. 스프링 부트 2.0 방식의 OAuth2 인증 재설정
+2.0에서 불필요한 객체 삭제 
+- ClientResources.java
+- UserTokenService.java
+
+구글, 페이스북에 대한 기본 정보는 스프링 부트 시큐리티 OAuth2 API에서 제공하므로  
+단지 시큐리티 설정에서 oauth2Login()만 추가로 설정하고  
+ID와 Secret만 등록해주면 됨 
+
+2.0 방식으로 OAuth2 인증 재설정
+1. 소셜별 ID, Secret 정보 입력
+```groovy
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id:
+            client-secret:
+          facebook:
+            client-id:
+            client-secret:
+```
+2. 카카오 정보를 담은 CustomOAuth2Provider 객체 생성 후 정보 입력
+```groovy
+custom:
+  oauth2:
+    kakao:
+      client-id:
+```
+
+3. 변경된 시큐리티 + OAuth2 설정
+4. 카카오 로그인 연동을 위한 설정 코드 추가
+5. 요청 성공 시 URI 변경
+    - '/loginSuccess'
+6. 요청 스크립트 코드 변경
+    - '/login' -> '/oauth2/authorization' 
+7. UserArgumentResolver 클래스에 User 정보를 받아오는 부분 추가

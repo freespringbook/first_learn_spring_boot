@@ -23,7 +23,8 @@
     <script>
         $('.btn_social').click(function () {
             var socialType = $(this).data('social');
-            location.href="/login/"+socialType;
+            // 요청 스크립트 코드 변경 '/login' -> '/oauth2/authorization'
+            location.href="/oauth2/authorization/"+socialType;
         });
     </script>
 
