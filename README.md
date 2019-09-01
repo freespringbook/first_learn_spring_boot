@@ -253,4 +253,31 @@ endif
 
 인증 프로세서가 최종까지 완료되면 설정된 성공 URL로 이동함
 
-인증된 User 정보를 세션에 저장해주는 기능 생성
+AOP를 이용하여 특정한 파라미터 형식을 취해 병렬적으로 User 객체에 인증된 정보를 가져올 수 있음
+일단 AOP로직을 만들어놓으면 User 정보를 가져오는 방법에 신경 쓸 필요가 없게 됨
+
+#### AOP 구현방법
+- 직접 AOP 로직을 작성하는 방법
+- 스프링의 전략 인터페이스 중 하나인 `HandlerMethodArgumentResolver`를 사용하는 방법
+
+##### HandlerMethodArgumentResolver
+전략 패턴의 일종으로 컨트롤러 메서드에서 특 조건에 해당하는 파라미터가 있으면  
+생성한 로직을 처리한 후 해당 파라미터에 바인딩해주는 전략 인터페이스
+
+두 메서드를 제공
+- `supportsParameter()` 메서드: `HandlerMethodArgumentResolver`가 해당하는 파라미터를 지원할지 여부를 반환함  
+`true`를 반환하면 `resolveArgument` 메서드가 수행됨
+- `resolveArgument()` 메서드: 파라미터의 인잣값에 대한 정보를 바탕으로 실제 객체를 생성하여 해당 파라미터 객체에 바인딩함
+
+> 특정 전략을 인터페이스로 만들고 이를 여러 전략 객체로 구현함  
+그리고 현재 클래스 레벨에서 전략 인터페이스를 의존하도록 함  
+이런 식으로 느슨하게 연결된 전략 클래스를 찾아 의존하도록 하는 방식이 전략 패턴임
+
+1. 인증된 User 정보를 세션에 저장해주는 기능 생성
+2. 기존 로직을 어노테이션을 사용하여 축소
+3. HandlerMethodArgumentResolver 인터페이스를 구현한 UserArgumentResolve 클래스 생성
+4. UserArgumentResolver 필터에서 동작할 수 있도록 등록하기
+5. 소셜 미디어 인증용 SocialUser 어노테이션 생성
+6. supportsParameter() 메서드에 해당하는 어노테이션 타입이 명시되어 있는지 확읺하는 로직 추가
+7. 세션에서 User 객체를 가져오는 resolveArgument() 메서드 구현
+8. 인증된 소셜 미디어 회원의 정보를 가져와 User 객체 만들기

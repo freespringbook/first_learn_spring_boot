@@ -29,25 +29,11 @@ public class LoginController {
      * 인증된 User 정보를 세션에 저장해주는 기능 생성
      * 인증이 성공적으로 처리된 이후에 리다이렉트되는 경로
      * 허용하는 요청의 URL 매핑을 /facebook/complete,/google/complete,/kakao/complete로 제한함
-     * @param session
+     * @param user
      * @return
      */
     @GetMapping(value = "/{facebook|google|kakao}/complete")
-    public String loginComplete(HttpSession session) {
-        // SecurityContextHolder에서 인증된 정보를 OAuth2Authentication 형태로 방아옴
-        // OAuth2Authentication은 기본적인 인증에 대한 정보뿐만 아니라 OAuth2 인증과 관련된 정보도 함께 제공함
-        OAuth2Authentication authentication = (OAuth2Authentication) SecurityContextHolder.getContext().getAuthentication();
-        // 리소스 서버에서 받아온 개인정보를 getDetails()를 사용해 Map 타입으로 받을 수 있음
-        Map<String, String> map = (HashMap<String, String>) authentication.getUserAuthentication().getDetails();
-        // 세션에 빌더를 사용하여 인증된 User 정보를 User 객체로 변환하여 저장함
-        session.setAttribute("user", User.builder()
-            .name(map.get("name"))
-            .email(map.get("email"))
-            .principal(map.get("id"))
-            .socialType(SocialType.FACEBOOK)
-            .createdDate(LocalDateTime.now())
-            .build()
-        );
+    public String loginComplete(@SocialUser User user) { // 간단한 방법으로 인증된 User 객체를 가져옴
         return "redirect:/board/list";
     }
 }
