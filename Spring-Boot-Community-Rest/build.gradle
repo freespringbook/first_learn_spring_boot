@@ -11,6 +11,10 @@ buildscript {
     }
 }
 
+/**
+ * 공통된 의존성
+ * 특별한 점은 jackson-datatype-jsr310 모듈을 넣어서 LocalDateTime 타입의 값도 JSON 형식으로 직렬화와 역직렬화가 가능하도록 설정했음
+ */
 subprojects {
     //2. 필요한 플러그인을 적용
     apply plugin: 'java'
@@ -49,7 +53,10 @@ subprojects {
     }
 }
 
-
+/**
+ * 스프링 부트 데이터 레스트 프로젝트명을 'data-rest'로 설정하여 데이터 레스트 스타터 의존성을 부여했음
+ * jackson 라이브러리의 최신 의존성 부여를 위해 기존 스타터에 포함된 의존성은 제외했음
+ */
 project(':data-rest') {
     dependencies {
         compile('org.springframework.boot:spring-boot-starter-data-rest') {
@@ -58,6 +65,10 @@ project(':data-rest') {
     }
 }
 
+/**
+ * jackson 라이브러리 의존성을 제외한 web 스타터 의존성을 설정했음
+ * 스프링 부트 데이터 레스트에는 자동으로 포함되어 있는 HATEOAS 제약 조건에 따라 링크를 생성하는 HATEOAS 스타터도 설정했음
+ */
 project(':rest-web') {
     dependencies {
         compile('org.springframework.boot:spring-boot-starter-web') {

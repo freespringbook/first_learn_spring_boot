@@ -37,6 +37,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-data-jpa')
     //5. 런타임 시점에만 H2 사용하도록 설정
     runtime('com.h2database:h2')
+    runtime('mysql:mysql-connector-java')
     runtime('org.springframework.boot:spring-boot-devtools')
     //6. compileOnly는 컴파일 전용 종속성 선언 설정
     //기존의 provided와 유사함
