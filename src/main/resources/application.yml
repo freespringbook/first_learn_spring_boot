@@ -14,7 +14,7 @@ spring:
       client:
         registration:
           google:
-            client-id: 
+            client-id:
             client-secret:
           facebook:
             client-id:

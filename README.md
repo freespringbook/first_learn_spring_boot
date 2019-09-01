@@ -375,3 +375,8 @@ custom:
 6. 요청 스크립트 코드 변경
     - '/login' -> '/oauth2/authorization' 
 7. UserArgumentResolver 클래스에 User 정보를 받아오는 부분 추가
+
+## 5.6 마치며
+- 인증과 권한 부여
+- 스프링 부트에서 OAuth2 라이브러리르 사용하여 프로퍼티로 필요한 정보를 쉽게 바인딩하는 방법
+- 전략 패턴을 사용하여 User의 세션 정보를 가져오고 저장 및 권한 처리 등을 해주는 HandlerMethodArgumentResolver 인터페이스르 따로 구현함 
