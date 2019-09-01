@@ -286,3 +286,40 @@ AOP를 이용하여 특정한 파라미터 형식을 취해 병렬적으로 User
 
 1. 로그인 화면 구성
 2. 인증 확인
+
+## 5. 페이지 권한 분리하기
+페이스북, 구글 카카오의 사용자 권한에 따라 접속할 수 있는 페이지를 제한
+
+#### 1. 권한 설정 추가
+```java
+// 소셜 미디어용 경로 지정
+.antMatchers("/facebook")
+    // 메서드의 파라미터로 원하는 권한을 전달하여 해당 권한을 지닌 사용자만 경로를 사용할 수 있도록 통제
+    .hasAuthority(FACEBOOK.getRoleType())
+.antMatchers("/google").hasAuthority(GOOGLE.getRoleType())
+.antMatchers("/kakao").hasAuthority(KAKAO.getRoleType())
+```
+
+#### 2. 권한에 따른 페이지 구성
+```java
+public class AuthorityTestController {
+
+    @GetMapping("/facebook")
+    public String facebook() {
+        return "facebook";
+    }
+
+    @GetMapping("/google")
+    public String google() {
+        return "google";
+    }
+
+    @GetMapping("/kakao")
+    public String kakao() {
+        return "kakao";
+    }
+
+}
+```
+
+권한이 없으면 403 AccessDenied Exception 이 발생

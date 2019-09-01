@@ -13,9 +13,9 @@ spring:
 facebook:
   client:
     # OAuth 클라이언트 사용자명으로 OAuth 공급자가 클라이언트를 식별하는 데 사용함
-    clientId: clientId
+    clientId: 388438261869931
     # OAuth 클라이언트 시크릿 키값
-    clientSecret: clientSecret
+    clientSecret: 8424ab50def891c7af02663d494f9c89
     # 엑세스 토큰을 제공하는 OAuth의 URI
     accessTokenUri: https://graph.facebook.com/oauth/access_token
     # 사용자가 리소스에 접근하는 걸 승인하는 경우 리다이렉션할 URI로 소셜 미디어에 따라 필요 없는 경우도 있음
@@ -31,8 +31,8 @@ facebook:
 
 google:
   client:
-    clientId: clientId
-    clientSecret: clientSecret
+    clientId: 330336014683-7t8mnp4th0q1mbofvqte5l9mvts8qn8f.apps.googleusercontent.com
+    clientSecret: 2VaTZHX1xftvMH1dOYAz7gDP
     accessTokenUri: https://www.googleapis.com/oauth2/v4/token
     userAuthorizationUri: https://accounts.google.com/o/oauth2/v2/auth
     scope: email, profile
@@ -41,7 +41,7 @@ google:
 
 kakao:
   client:
-    clientId: clientId
+    clientId: df074580c30a655d8989aee85261117d
     accessTokenUri: https://kauth.kakao.com/oauth/token
     userAuthorizationUri: https://kauth.kakao.com/oauth/authorize
   resource:

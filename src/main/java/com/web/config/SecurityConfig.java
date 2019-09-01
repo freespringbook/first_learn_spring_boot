@@ -75,6 +75,12 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 .antMatchers("/", "/login/**", "/css/**", "/images/**", "/js/**", "/console/**")
                     // 설정한 리퀘스트 패턴을 누구나 접근할 수 있도록 허용
                     .permitAll()
+                // 소셜 미디어용 경로 지정
+                .antMatchers("/facebook")
+                    // 메서드의 파라미터로 원하는 권한을 전달하여 해당 권한을 지닌 사용자만 경로를 사용할 수 있도록 통제
+                    .hasAuthority(FACEBOOK.getRoleType())
+                .antMatchers("/google").hasAuthority(GOOGLE.getRoleType())
+                .antMatchers("/kakao").hasAuthority(KAKAO.getRoleType())
                 // 설정한 요청 이외의 리퀘스트 요청을 표현
                 .anyRequest()
                     // 해당 요청은 인증된 사용자만 할 수 있음
