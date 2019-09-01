@@ -19,7 +19,6 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import javax.servlet.http.HttpSession;
-import java.security.Security;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -144,7 +143,7 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
      * @param authentication
      * @param map
      */
-    private void selfRoleIfNotSame(User user, OAuth2Authentication authentication, Map<String, String> map) {
+    private void selfRoleIfNotSame(User user, OAuth2Authentication authentication, Map<String, Object> map) {
         if(!authentication.getAuthorities().contains(new SimpleGrantedAuthority(user.getSocialType().getRoleType()))) {
             SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(map, "N/A", AuthorityUtils.createAuthorityList(user.getSocialType().getRoleType())));
         }

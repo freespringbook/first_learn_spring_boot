@@ -1,5 +1,6 @@
 package com.web.controller;
 
+import com.web.annotation.SocialUser;
 import com.web.domain.User;
 import com.web.domain.enums.SocialType;
 import org.springframework.security.core.context.SecurityContextHolder;

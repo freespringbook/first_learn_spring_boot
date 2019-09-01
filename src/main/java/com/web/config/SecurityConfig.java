@@ -4,10 +4,12 @@ import com.web.domain.enums.SocialType;
 import com.web.oauth.ClientResources;
 import com.web.service.UserTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -55,6 +57,7 @@ import static com.web.domain.enums.SocialType.*;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
+    @Qualifier("oauth2ClientContext")
     private OAuth2ClientContext oAuth2ClientContext;
 
     /**
@@ -131,8 +134,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         CompositeFilter filter = new CompositeFilter();
         List<Filter> filters = new ArrayList<>();
         filters.add(oauth2Filter(facebook(), "/login/facebook", FACEBOOK));
-        filters.add(oauth2Filter(facebook(), "/login/google", GOOGLE));
-        filters.add(oauth2Filter(facebook(), "/login/kakao", KAKAO));
+        filters.add(oauth2Filter(google(), "/login/google", GOOGLE));
+        filters.add(oauth2Filter(kakao(), "/login/kakao", KAKAO));
+        filter.setFilters(filters);
         return filter;
     }
 
@@ -155,11 +159,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         // SocialType을 OAuth2AuthoritiesExtractor 클래스에 넘겨주면 권한 네이밍을 알아서 일괄적으로 처리하도록 설정이 완료됨
         filter.setTokenServices(new UserTokenService(client, socialType));
         // 인증이 성공적으로 이루어지면 필터에 리다이렉트 될 URL을 설정함
-        filter.setAuthenticationSuccessHandler((request, response, authentication) ->
-                response.sendRedirect("/" + socialType.getValue() + "/complete"));
+        filter.setAuthenticationSuccessHandler((request, response, authentication) -> response.sendRedirect("/" + socialType.getValue() + "/complete"));
         // 인증이 실패하면 필터에 리다이렉트 될 URL을 설정함
-        filter.setAuthenticationFailureHandler((request, response, exception) ->
-                response.sendRedirect("/error"));
+        filter.setAuthenticationFailureHandler((request, response, exception) -> response.sendRedirect("/error"));
         return filter;
     }
 
