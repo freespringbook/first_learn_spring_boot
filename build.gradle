@@ -1,8 +1,7 @@
 //1. 빌드 스크립트 내부에 버전, 의존 라이브럴, 저장소를 설정해 스프링 부트 플러그인을 사용할 수 있게 함
 buildscript {
     ext {
-//        springBootVersion = '2.1.7.RELEASE'
-        springBootVersion = '1.5.21.RELEASE'
+        springBootVersion = '2.1.7.RELEASE'
     }
     repositories {
         mavenCentral()
@@ -19,7 +18,7 @@ apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = 1.8
+sourceCompatibility = 12
 
 repositories {
     mavenCentral()
@@ -28,7 +27,11 @@ repositories {
 //4. 프로젝트 내에 사용할 라이브러리의 의존성을 설정
 //메인 부트 버전에 맞게 호환성을 가져오기 위해 디폴트 버전 사용
 dependencies {
-    compile('org.springframework.security.oauth:spring-security-oauth2')
+    // 클라이언트 자동 인증 설정
+    compile('org.springframework.security:spring-security-oauth2-client')
+    // JWT와 관련한 권한을 안전하게 전송하기 위한 프레임워크인 JOSE 추가
+    compile('org.springframework.security:spring-security-oauth2-jose')
+    compile 'org.springframework.boot:spring-boot-starter-security'
     compile('org.springframework.boot:spring-boot-starter-web')
     compile('org.springframework.boot:spring-boot-starter-thymeleaf')
     compile('org.springframework.boot:spring-boot-starter-data-jpa')

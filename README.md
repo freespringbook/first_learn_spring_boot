@@ -227,7 +227,7 @@ https://developers.kakao.com/apps
 ### 2. 시큐리티 + OAuth2 설정하기
 스프링 부트 1.5 버전 시큐리티와 OAuth2를 설정
 
-## 3. 어노테이션 기반으로 User 정보 불러오기
+### 3. 어노테이션 기반으로 User 정보 불러오기
 인증된 User의 개인정보를 저장하고 직접 User 정보를 불러오기
 보통 User와 관련된 개인정보는 세션에 저장함
 
@@ -282,12 +282,12 @@ AOP를 이용하여 특정한 파라미터 형식을 취해 병렬적으로 User
 7. 세션에서 User 객체를 가져오는 resolveArgument() 메서드 구현
 8. 인증된 소셜 미디어 회원의 정보를 가져와 User 객체 만들기
 
-## 4. 인증 동작 확인하기
+### 4. 인증 동작 확인하기
 
 1. 로그인 화면 구성
 2. 인증 확인
 
-## 5. 페이지 권한 분리하기
+### 5. 페이지 권한 분리하기
 페이스북, 구글 카카오의 사용자 권한에 따라 접속할 수 있는 페이지를 제한
 
 #### 1. 권한 설정 추가
@@ -323,3 +323,15 @@ public class AuthorityTestController {
 ```
 
 권한이 없으면 403 AccessDenied Exception 이 발생
+
+## 5.5 스프링 부트 2.0 기반의 OAuth2 설정하기
+### 1. 스프링 부트 2.0 버전으로 의존성 업그레이드
+기존에는 `spring-security-oauth2`만 설정해주어도 OAuth2 관련 모든 설정이 끝났지만 2.0 부터는 설정이 세분화 됨  
+기본적인 OAuth2 인증 관련 객체들이 시큐리티로 이전됨
+
+2.0에서는 클라이언트 자동 인증 설정을 위해 `org.springframework.security:spring-security-oauth2-client`를 추가함
+2.0에서 JWT(JSON Web Tokens)와 관련한 권한을 안전하게 전송하기 위한 프레임워크인 JOSE(Javascript Object Signing and Encryption)가 추가됨
+
+JWT에는 자신의 리소스에 접근할 수 있는 권한 정보가 들어있는데 JOSE는 JWT의 암호화/복호화 및 일정한 기능을 제공함
+
+2.0부터는 Thymeleaf의 java8time 설정이 포함되어있음
