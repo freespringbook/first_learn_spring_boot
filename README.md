@@ -248,7 +248,7 @@ endif
 -[#gray,bold]->
 :User 파라미터 바인딩;
 ```
-![인증 처리 후 User 정보 세션 처리](bit.ly/2ZsyIKg)
+![인증 처리 후 User 정보 세션 처리](http://bit.ly/2ZsyIKg)
 
 
 인증 프로세서가 최종까지 완료되면 설정된 성공 URL로 이동함
