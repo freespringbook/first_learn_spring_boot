@@ -235,3 +235,90 @@ rep -> client:응답
    include 'rest-web'
    ```
 2. build.gradle 설정
+
+### 2. REST API 구현하기
+1. REST API DataSource 및 포트 설정
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/testdb
+    username: freelife1191
+    password: 1
+    driver-class-name: com.mysql.cj.jdbc.Driver
+server:
+  port: 8081
+```
+
+2. BoardType Enum 생성
+3. Board 클래스 생성
+4. SocialType Enum 생성
+5. User 클래스 생성
+6. BoardRepository 생성
+7. UserRepository 생성
+8. BoardRestController 생성
+
+**PagedResources** 객체를 생성하면 링크를 추가한 RESTful 데이터를 생성한다  
+인터페이스의 일관성을 위해 HATEOAS를 적용하여 관련 리소스 정보를 추가한다
+
+HATEOAS 링크 예제
+```json
+"_links": {
+    "first": {
+        "href": "http://localhost:8081/api/boards?page=0&size=10"
+    },
+    "self": {
+        "href": "http://localhost:8081/api/boards{?page,size,sort,projection}"
+    },
+    "next": {
+        "href": "http://localhost:8081/api/boards?page=1&size=10"
+    },
+    "last": {
+        "href": "http://localhost:8081/api/boards?page=20&size=10"
+    }
+}
+```
+- first: 첫 페이지
+- self: 자기 자신의 URL의 파라미터 정보
+- next: 다음 페이지
+- last: 마지막 페이지
+
+위와 같이 페이지 처리에 관련된 정보를 키/값 형식으로 추가할 수 있음  
+만약 클라이언트가 위 키값을 사용하여 게시판 페이지의 로직을 처리했다면 관련 URL이 버전업 되거나  
+형식이 바뀌더라도 클라이언트에서 따로 로직을 수정할 필요가 없음
+
+
+http://localhost:8081/api/boards
+
+Board 객체의 페이징 처리된 데이터 확인
+```json
+{
+  "_embedded" : {
+    "boards" : [ {
+      "title" : "게시글1",
+      "subTitle" : "순서1",
+      "content" : "콘텐츠",
+      "boardType" : "free",
+      "createdDate" : "2019-09-02T23:12:06",
+      "updatedDate" : "2019-09-02T23:12:06"
+    }, {
+      "title" : "게시글2",
+      "subTitle" : "순서2",
+      "content" : "콘텐츠",
+      "boardType" : "free",
+      "createdDate" : "2019-09-02T23:12:06",
+      "updatedDate" : "2019-09-02T23:12:06"
+    } ]
+  },
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8081/api/boards"
+    }
+  },
+  "page" : {
+    "size" : 10,
+    "totalElements" : 200,
+    "totalPages" : 20,
+    "number" : 0
+  }
+}
+```
