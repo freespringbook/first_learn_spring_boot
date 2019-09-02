@@ -322,3 +322,43 @@ Board 객체의 페이징 처리된 데이터 확인
   }
 }
 ```
+
+- _embedded: 호출한 목적 데이터가 중첩형식으로 부여되어 있음
+- _link: 관련된 링크들이 있음
+- page: 페이징 처리를 위한 값들이 제공됨
+
+### 3. CORS 허용 및 시큐리티 설정
+출처는 자원+도메인+포트번호로 결합된 문자열임  
+이 조합에서 한 글자라도 다르면 다른 출처로 판단됨  
+이러한 교차 출처(cross-origin) HTTP 요청을 가능하게 해주는 메커니즘을  
+교차 출처 자원 공유(cross origin resource sharing, CORS) 라고 한다  
+CORS는 서로 다른 도메인의 접근을 허용하는 권한을 부여한다
+
+```plantuml
+title 교차 출처 방식의 시퀀스 다이어그램
+
+participant "웹 클라이언트\n(springboot.com)" as webclient
+participant "서버\n(springboot.com)" as server
+participant "서버\n(sub.springboot.com)" as server2
+
+group 동일 출처(same orign)
+  webclient -> server: home.js 요청
+  server --> webclient: home.js 응답
+end
+
+group 교차 출처(CORS 사용)
+  webclient -> server2: home.js 요청
+  server2 --> webclient: CORS를 사용한 home.js 응답
+end
+```
+![교차 출처 방식의 시퀀스 다이어그램](/images/cors.png)
+
+http://springboot.com 에서 허용하는 교차 출처 자원 공유 정책  
+| URL                             | 결과                |
+| ------------------------------- | ------------------- |
+| http://springboot.com/find/task | 성공                |
+| http://springboot.com:8080      | 실패(포트 다름)     |
+| https://springboot.com          | 실패(프로토콜 다름) |
+| http://study.springboot.com     | 실패(호스트 다름)   |
+
+- CORS 적용하기

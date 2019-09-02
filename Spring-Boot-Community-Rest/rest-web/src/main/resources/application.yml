@@ -4,9 +4,5 @@ spring:
     username: freelife
     password: 1
     driver-class-name: com.mysql.cj.jdbc.Driver
-  jpa:
-    hibernate:
-      # 애플리케이션이 구동될 때마다 기존 테이블을 삭제하고 다시 생성함
-      ddl-auto: create
 server:
   port: 8081
