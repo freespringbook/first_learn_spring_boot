@@ -354,6 +354,7 @@ end
 ![교차 출처 방식의 시퀀스 다이어그램](/images/cors.png)
 
 http://springboot.com 에서 허용하는 교차 출처 자원 공유 정책  
+
 | URL                             | 결과                |
 | ------------------------------- | ------------------- |
 | http://springboot.com/find/task | 성공                |
@@ -362,3 +363,7 @@ http://springboot.com 에서 허용하는 교차 출처 자원 공유 정책
 | http://study.springboot.com     | 실패(호스트 다름)   |
 
 - CORS 적용하기
+
+### 4. 생성, 수정, 삭제 구현
+1. REST API 컨트롤러의 POST, PUT, DELETE 메서드 생성
+2. Board 객체에 setCreatedDateNow(), update() 메서드 추가

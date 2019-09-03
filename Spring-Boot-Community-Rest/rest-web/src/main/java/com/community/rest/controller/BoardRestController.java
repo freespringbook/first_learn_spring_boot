@@ -44,4 +44,43 @@ public class BoardRestController {
         return ResponseEntity.ok(resources);
     }
 
+    /**
+     * POST 요청에 대한 매핑을 지원
+     * @param board
+     * @return
+     */
+    @PostMapping
+    public ResponseEntity<?> postBoard(@RequestBody Board board) {
+        board.setCreatedDateNow(); // 서버 시간으로 생성된 날짜를 설정
+        boardRepository.save(board);
+        return new ResponseEntity<>("{}", HttpStatus.CREATED);
+    }
+
+    /**
+     * PUT 요청에 대한 매핑을 지원
+     * 어떤 Board 객체를 수정할 것인지 idx 값을 지정해야 매핑됨
+     * @param idx
+     * @param board
+     * @return
+     */
+    @PutMapping("/{idx}")
+    public ResponseEntity<?> putBoard(@PathVariable("idx") Long idx, @RequestBody Board board) {
+        Board persistBoard = boardRepository.getOne(idx);
+        persistBoard.update(board); // persistBoard에 변경된 board의 데이터를 반영함
+        boardRepository.save(persistBoard);
+        return new ResponseEntity<>("{}", HttpStatus.OK);
+    }
+
+    /**
+     * DELETE 요청에 대한 매핑을 지원함
+     * 어떤 board 객체를 삭제할 것인지 idx 값을 지정해야 매핑됨
+     * @param idx
+     * @return
+     */
+    @DeleteMapping("/{idx}")
+    public ResponseEntity<?> deleteBoard(@PathVariable("idx") Long idx) {
+        boardRepository.deleteById(idx);
+        return new ResponseEntity<>("{}", HttpStatus.OK);
+    }
+
 }
