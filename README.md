@@ -353,7 +353,7 @@ end
 ```
 ![교차 출처 방식의 시퀀스 다이어그램](/images/cors.png)
 
-http://springboot.com 에서 허용하는 교차 출처 자원 공유 정책  
+##### http://springboot.com 에서 허용하는 교차 출처 자원 공유 정책  
 
 | URL                             | 결과                |
 | ------------------------------- | ------------------- |
@@ -367,3 +367,6 @@ http://springboot.com 에서 허용하는 교차 출처 자원 공유 정책
 ### 4. 생성, 수정, 삭제 구현
 1. REST API 컨트롤러의 POST, PUT, DELETE 메서드 생성
 2. Board 객체에 setCreatedDateNow(), update() 메서드 추가
+
+### 5. 동작 확인
+API는 8081 포트, 커뮤니티 게시판은 8080 포트로 실행하여 추가된 기능 정상 동작 확인

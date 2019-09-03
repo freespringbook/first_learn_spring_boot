@@ -2,6 +2,7 @@ package com.community.rest.controller;
 
 import com.community.rest.domain.Board;
 import com.community.rest.repository.BoardRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
 import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/boards")
 public class BoardRestController {

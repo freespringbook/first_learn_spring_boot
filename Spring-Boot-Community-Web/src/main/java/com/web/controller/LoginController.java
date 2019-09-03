@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class LoginController {
 
-    @GetMapping("/login")
+    @GetMapping({"","/login","/logout"})
     public String login() {
         return "login";
     }
@@ -30,4 +30,5 @@ public class LoginController {
     public String loginComplete(@SocialUser User user) { // 간단한 방법으로 인증된 User 객체를 가져옴
         return "redirect:/board/list";
     }
+
 }
