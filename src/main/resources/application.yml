@@ -1,7 +1,13 @@
-datasource:
-  url: jdbc:h2:mem:testdb
-
 spring:
+  datasource:
+    url: jdbc:h2:mem:testdb
+    #    url: jdbc:mysql://
+    #    username:
+    #    password:
+    #    driver-class-name: com.mysql.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
   h2:
     console:
       enabled: true
@@ -9,6 +15,8 @@ spring:
   devtools:
     livereload:
       enabled: true
+  thymeleaf:
+    cache: false
   security:
     oauth2:
       client:
