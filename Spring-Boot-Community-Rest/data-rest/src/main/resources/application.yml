@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/testdb
+    username: freelife
+    password: 1
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    rest:
+      # API의 모든 요청의 기본 경로를 지정함
+      base-path: /api
+      # 클라이언트가 따로 페이지 크기를 요청하지 않았을 때 적용 할 기본 페이지 크기를 설정
+      default-page-size: 10
+      # 최대 페이지 수를 설정
+      max-page-size: 10
+server:
+  port: 8081

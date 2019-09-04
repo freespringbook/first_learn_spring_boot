@@ -370,3 +370,52 @@ end
 
 ### 5. 동작 확인
 API는 8081 포트, 커뮤니티 게시판은 8080 포트로 실행하여 추가된 기능 정상 동작 확인
+
+1. 게시글 저장하기 확인
+2. 게시글 수정하기 확인
+3. 게시글 삭제하기 확인
+
+## 6.4 스프링 부트 데이터 레스트로 REST API 구현하기
+복잡한 로직 없이 단순 요청을 받아 데이터를 있는 그대로 반환할 때 스프링 부트 데이터 레스트를 사용  
+MVC 패턴에서 VC를 생략하고 도메인과 Repository로만 REST API를 제공하여 쉽고 빠르게 프로젝트 진행
+
+#### 구현 절차
+1. 스프링 부트 데이터 레스트로 REST API 구현하기
+2. `@RepositoryRestController`를 사용하여 REST API 구현하기
+3. 프로젝션, 롤, 이벤트 바인딩 등 세부적인 설정 처리
+4. HAL 브라우저 적용하기
+
+### 1. 준비하기
+미리 구현한 data-rest 모듈을 사용해 개발
+
+1. application.yml 생성
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/testdb
+    username: freelife
+    password: 1
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  data:
+    rest:
+      # API의 모든 요청의 기본 경로를 지정함
+      base-path: /api
+      # 클라이언트가 따로 페이지 크기를 요청하지 않았을 때 적용 할 기본 페이지 크기를 설정
+      default-page-size: 10
+      # 최대 페이지 수를 설정
+      max-page-size: 10
+server:
+  port: 8081
+```
+
+#### 스프링 부트 데이터 레스트 프로퍼티
+| 이름                    | 설명                                                         |
+| ----------------------- | ------------------------------------------------------------ |
+| page-param-name         | 페이지를 선택하는 쿼리 파라미터명을 변경함                   |
+| limit-param-name        | 페이지 아이템 수를 나타내는 쿼리 파라미터명을 변경함         |
+| sort-param-name         | 페이지의 정렬값을 나타내는 쿼리 파라미터명을 변경함          |
+| default-media-type      | 미디어 타입을 지정하지 않았을 때 사용할 기본 미디어 타입을 설정함 |
+| return-body-on-create   | 새로운 엔티티를 생성한 이후에 응답 바디(Response Body) 반환 여부를 설정함 |
+| return-body-on-update   | 엔티티를 수정한 이후에 응답 바디 반환 여부를 설정함          |
+| enable-enum-translation | 'rest-messages'라는 프로퍼티 파일을 만들어서 지정한 enum 값을 사용하게 해줌<br />적합한 enum 값(DEAFAULT, ALL, VISIBILITY, ANNOTATED)을 키로 사용함 |
+| detection-strategy      | 리포지토리 노출 전략을 설정하는 프로퍼티값<br />RepositoryDetectionStrategy 인터페이스 내부에 구현된 enum 값으로 설정함 |
