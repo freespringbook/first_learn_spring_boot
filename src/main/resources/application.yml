@@ -14,12 +14,12 @@ spring:
       client:
         registration:
           google:
-            client-id:
-            client-secret:
+            client-id: clientId
+            client-secret: clientSecret
           facebook:
-            client-id:
-            client-secret:
+            client-id: clientId
+            client-secret: clientSecret
 custom:
-        oauth2:
-          kakao:
-            client-id:
+  oauth2:
+    kakao:
+      client-id: clientId

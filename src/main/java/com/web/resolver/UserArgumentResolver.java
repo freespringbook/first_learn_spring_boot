@@ -77,7 +77,7 @@ public class UserArgumentResolver implements HandlerMethodArgumentResolver {
                 Map<String, Object> map = authentication.getPrincipal().getAttributes();
                 // 예전에는 getAuthorities() 메서드로 권한을 불러와서 인증된 소셜 미디어가 어디인지 알았다면 이제는
                 // getAuthorizedClientRegistrationId() 메서드로 파악할 수 있음
-                User convertUser = convertUser(String.valueOf(authentication.getAuthorities().toArray()[0]), map);
+                User convertUser = convertUser(authentication.getAuthorizedClientRegistrationId(), map);
                 // 이메일을 사용해 이미 DB에 저장된 사용자라면 바로 User 객체를 반환 그렇지 않으면 저장
                 user = userRepository.findByEmail(convertUser.getEmail());
                 if (user == null) {
