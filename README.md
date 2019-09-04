@@ -419,3 +419,14 @@ server:
 | return-body-on-update   | 엔티티를 수정한 이후에 응답 바디 반환 여부를 설정함          |
 | enable-enum-translation | 'rest-messages'라는 프로퍼티 파일을 만들어서 지정한 enum 값을 사용하게 해줌<br />적합한 enum 값(DEAFAULT, ALL, VISIBILITY, ANNOTATED)을 키로 사용함 |
 | detection-strategy      | 리포지토리 노출 전략을 설정하는 프로퍼티값<br />RepositoryDetectionStrategy 인터페이스 내부에 구현된 enum 값으로 설정함 |
+
+### 2. 기본 노출 전략 살펴보기
+스프링 부트 데이터 레스트에서 제공하는 프로퍼티 중 `detection-strategy`에 RepositoryDetectionStrategy를 사용하여 Repository의 REST 리소스 노출 여부를 설정할 수 있음
+
+#### RepositoryDetectionStrategy에 주어진 enum 값
+- ALL: 모든 유형의 리포지토리를 노출함
+- DEFAULT: public으로 설정된 모든 리포지토리를 노출함  
+  여기서 `@(Repository)RestResource`가 'exported'로 설정된 flag 값이 고려되어 노출됨
+- ANNOTATION: `@(Repository)RestResource`가 설정된 Repository만 노출함  
+  여기서 `@(Repository)RestResource`가 'exported'로 설정된 flag 값이 false가 아니어야 함
+- VISIBILITY: public으로 설정된 인터페이스만 노출함
