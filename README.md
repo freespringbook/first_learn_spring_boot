@@ -430,3 +430,97 @@ server:
 - ANNOTATION: `@(Repository)RestResource`가 설정된 Repository만 노출함  
   여기서 `@(Repository)RestResource`가 'exported'로 설정된 flag 값이 false가 아니어야 함
 - VISIBILITY: public으로 설정된 인터페이스만 노출함
+
+### 3. 스프링 부트 데이터 레스트로 REST API 구현하기
+`@RepositoryRestResource`는 스프링 부트 데이터 레스트에서 지원하는 어노테이션  
+별도의 컨트롤러와 서비스 영역 없이 미리 내부적으로 정의되어 있는 로직을 따라 처리됨  
+그 로직은 해당 도메인의 정보를 매핑하여 REST API를 제공하는 역할을 함
+
+1. BoardRepository 생성
+```java
+package com.community.rest.repository;
+
+import com.community.rest.domain.Board;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.stereotype.Repository;
+
+@RepositoryRestResource
+public interface BoardRepository extends JpaRepository<Board, Long> {
+}
+```
+2. UserRepository 생성
+```java
+package com.community.rest.repository;
+
+import com.community.rest.domain.User;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.stereotype.Repository;
+
+@RepositoryRestResource
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+```
+
+3. 터미널에서 접속하여 결과 확인
+```bash
+curl http://localhost:8081/api/boards
+```
+
+```json
+{
+  "_embedded" : {
+    "boards" : [ {
+      "title" : "게시글1",
+      "subTitle" : "순서1",
+      "content" : "콘텐츠1",
+      "boardType" : "free",
+      "createdDate" : "2019-09-03T23:34:17",
+      "updatedDate" : "2019-09-03T23:37:23"
+    }, {
+      "title" : "게시글2",
+      "subTitle" : "순서2",
+      "content" : "콘텐츠",
+      "boardType" : "free",
+      "createdDate" : "2019-09-03T23:34:17",
+      "updatedDate" : "2019-09-03T23:34:17"
+    } ]
+  },
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8081/api/boards"
+    }
+  },
+  "page" : {
+    "size" : 10,
+    "totalElements" : 201,
+    "totalPages" : 21,
+    "number" : 0
+  }
+}
+```
+
+HATEOAS를 지키며 MVC 패턴을 활용한 방법보다 더 많은 링크 정보를 제공함  
+boards 키의 내부 "_links"는 해당 Board와 관련된 링크정보를 포함함  
+외부 "_links"는 Board의 페이징 처리와 관련된 링크 정보를 포함함  
+
+#### 내부링크에서 알 수 있는 것 
+- 해당 Board에 대한 URI
+- 프로젝션을 통한 Board 호출 URI
+- 해당 Board를 작성한 User의 URI
+
+#### 외부링크에서 알 수 있는 것
+- 게시판의 첫 번째 리스트 URI("first")
+- 자기 자신의 URI("self")
+- 다음 페이지
+- 마지막 페이지
+- 프로파일 정보 등
+
+위의 정보들은 키값(key:value) 형식으로 구성되어 있어서 클라이언트가 키를 참조하도록 코드를 설정한다면 서버에서 요청된 데이터의 정보가 바뀌더라도 클라이언트 입장에서는 코드를 수정할 필요가 없음
+
+ex) 서버에서 한 페이지의 게시글 수를 10이 아니라 20으로 설정하려고 함  
+만약 클라이언트가 URL을 직접 호출하여 가져 온다면  
+"http://localhost:8081/api/boards?page=0&size=20"과 같이 수정해야함
+
+클라이언트가 "_links"의 "first" 값을 참조하고 있었다면 서버에서 제공하는 대로 값을 받아오기 때문에 수정할 필요가 없음
