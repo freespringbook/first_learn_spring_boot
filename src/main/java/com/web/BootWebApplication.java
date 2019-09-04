@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 import java.util.stream.IntStream;
 
 @SpringBootApplication
-public class SpringBootCommunityWebApplication {
+public class BootWebApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SpringBootCommunityWebApplication.class, args);
+        SpringApplication.run(BootWebApplication.class, args);
     }
 
     /**
