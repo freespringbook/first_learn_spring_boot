@@ -989,9 +989,9 @@ public class BoardEventTest {
 ### 9. URI 처리
 URI 경로 관리
 - basePath를 '/api'로 설정 시 기본 접속 URI
-```bash
-http://localhost:8081/api/boards
-```
+  ```bash
+  http://localhost:8081/api/boards
+  ```
 
 BoardRepository 클래스에 추가되어 있는 `@RepositoryRestResource`의 path 기본값은 'boards'
 - 경로 변경 테스트를 위해 path를 'notice'로 수정하여 요청
@@ -1049,3 +1049,31 @@ BoardRepository 클래스에 추가되어 있는 `@RepositoryRestResource`의 pa
 특정 리포지토리, 쿼리 메서드, 필드를 노출하고 싶지 않을 때  
 exported를 false로 지정하면 됨  
 `@RestResource`는 메서드와 도메인 필드에서도 사용할 수 있음
+```java
+@RepositoryRestResource(exported = false)
+@RestResource(exported = false)
+```
+일반 적인 경우 프로젝션을 사용하는 방법이 더 효과적임  
+프로젝션을 사용하기 힘든 상황이라면 exported를 false로 지정해서 노출을 제한하는 방법을 추천
+
+### 10. HAL 브라우저 적용하기
+HAL 브라우저를 사용하면 요청과 응답 데이터 뿐만 아니라 모든 테스트를 GUI 화면에서 진행할 수 있음  
+HAL 브라우저의 의존성 추가는 다음과 같은 코드 한 줄이면 적용할 수 있음
+##### HAL 브라우저 의존성 추가
+```groovy
+compile('org.springframework.data:spring-data-rest-hal-browser')
+```
+REST API를 구동시키고 루트 경로로 들어가면 HAL 브라우저 UI 창으로 리다이렉트 됨
+
+##### HAL 브라우저 항목
+- Explorer: 검색할 URI를 지정함
+- Custom Request Headers: 검색을 요청할 때 헤더를 설정할 수 있음
+- Properties: 페이징 처리와 같은 부가적인 프로퍼티 정보를 표현함
+- Links: 응답 데이터에서 제공하는 링크(_links)값의 데이터를 표현함
+- Response Header: 응답 헤더를 표현함
+- Response Body: 응답 바디를 JSON형으로 표현함
+
+GET 요청 시 어떤 파라미터가 필요한지 알 수 있고 적절한 값을 추가하여 URI를 요청할 수 있음  
+페이징 처리나 프로젝션 관련 파라미터를 추가할 때 용이함
+
+NON-GET으로 POST, PUT, PATCH등 다양한 요청을 테스트 할 수 있음
