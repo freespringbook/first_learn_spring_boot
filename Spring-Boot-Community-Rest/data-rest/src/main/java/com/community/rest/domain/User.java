@@ -1,6 +1,7 @@
 package com.community.rest.domain;
 
 import com.community.rest.domain.enums.SocialType;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -28,6 +29,7 @@ public class User {
     private String name;
 
     @Column
+    @JsonIgnore
     private String password;
 
     @Column

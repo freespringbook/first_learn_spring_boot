@@ -570,3 +570,141 @@ $ curl http://localhost:8081/api/boards
 #### CORS 적용
 rest-web에 적용한 RestWebApplication 의 CORS 적용 부분 카피해서
 data-rest의 DataRestApplication 에 적용
+
+### 6. 프로젝션으로 노출 필드 제한하기
+사용자 개인정보처럼 민감한 데이터를 다룰 때는 한정된 값만 사용하도록 제한
+
+User 데이너 요청 시 모든 필드를 조회하여 가져옴
+```bash
+$ curl http://localhost:8081/api/users/1
+```
+
+User를 GET하여 얻은 결과
+```json
+{
+  "name" : "havi",
+  "password" : "test",
+  "email" : "havi@gmail.com",
+  "principal" : null,
+  "socialType" : null,
+  "createdDate" : "2019-09-07T16:57:45",
+  "updatedDate" : null,
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8081/api/users/1"
+    },
+    "user" : {
+      "href" : "http://localhost:8081/api/users/1"
+    }
+  }
+}
+```
+#### 스프링 부트 데이터 레스트 반환값을 제어하는 3가지 방법
+- 도메인 필드에 `@JsonIgnore`를 추가하는 방법
+- `@Projection`을 사용하는 방법
+- 프로젝션을 수동으로 등록하는 방법
+
+##### 1. 도메인 필드에 `@JsonIgnore`를 추가하는 방법
+`@JsonIgnore`를 추가하는 방법이 가장 간단함  
+User 도메인에 `@JsonIgnore` 어노테이션을 사용하면 해당 필드가 반환값에 포함되지 않음
+```java
+@Column
+@JsonIgnore
+private String password;
+```
+
+##### 2. `@Projection`을 사용하는 방법
+상황에 따라 유동적으로 설정하고 싶은 필드가 있을 때   
+프로젝션을 설정하여 원하는 필드만 제한할 수 있음  
+프로젝션은 사용자에게 제공되는 정보를 줄일 수도 있고 반대로 제공하지 않던 데이터를 가져올 수도 있음
+
+**유의 사항**
+
+- 프로젝션 인터페이스 생성 시 반드시 해당 도메인 클래스와 같은 패키지 경로 또는 하위 패키지 경로에 생성해야 함
+- `@RepositoryRestResource` 어노테이션의 excerptProjection 프로퍼티로 관리되는 리소스 참조는 단일 참조 시 적용되지 않음
+
+1. User의 이름만 노출하도록 UserOnlyContainName Projection 설정
+```java
+import com.community.rest.domain.User;
+import org.springframework.data.rest.core.config.Projection;
+
+@Projection(name = "getOnlyName", types = { User.class})
+public interface UserOnlyContainName {
+    String getName();
+}
+```
+2. UserRepository에 Projection 적용
+```java
+import com.community.rest.domain.User;
+import com.community.rest.domain.projection.UserOnlyContainName;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+
+@RepositoryRestResource(excerptProjection = UserOnlyContainName.class)
+public interface UserRepository extends JpaRepository<User, Long> {
+}
+```
+3. 프로젝션을 적용하여 User의 이름만 노출 테스트
+```bash
+$ curl http://localhost:8081/api/users
+```
+```json
+{
+  "_embedded" : {
+    "users" : [ {
+      "name" : "havi",
+      "_links" : {
+        "self" : {
+          "href" : "http://localhost:8081/api/users/1"
+        },
+        "user" : {
+          "href" : "http://localhost:8081/api/users/1{?projection}",
+          "templated" : true
+        }
+      }
+    } ]
+  },
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8081/api/users{?page,size,sort,projection}",
+      "templated" : true
+    },
+    "profile" : {
+      "href" : "http://localhost:8081/api/profile/users"
+    }
+  },
+  "page" : {
+    "size" : 10,
+    "totalElements" : 1,
+    "totalPages" : 1,
+    "number" : 0
+  }
+}
+```
+**유의 사항**
+
+http://localhost:8081/api/users/1 과 같이 단일 참조 시에는 적용되지 않음  
+
+**유의 사항 해결을 위한 3가지 대책**
+- /api/users/1?projection=getOnlyName을 적용하면 됨  
+- `@JsonIgnore`를 사용하여 특정 필드를 막은 후 상황에 따라 사용할 수 있게 `@Projection`으로 참조를 허용할 수 있으나 복잡하여 추천하지 않음
+- 특정 경로에 따라 반환할 데이터가 명확한 방법인 `@RepositoryRestController`를 사용하는 것을 추천함
+##### 3. 프로젝션을 수동으로 등록하는 방법
+excerptProjection을 설정하지 않고 수동으로 프로젝션을 등록  
+수동 등록 시에는 반드시 프로젝션 타깃이 될 도메인과 동일하거나 하위에 있는 패키지 경로로 들어가야함
+
+- RepositoryRestConfiguration 클래스를 사용하여 수동으로 프로젝션 등록
+```java
+import org.springframework.context.annotation.Configuration;
+import org.springframework.data.rest.core.config.RepositoryRestConfiguration;
+import org.springframework.data.rest.webmvc.config.RepositoryRestConfigurer;
+
+@Configuration
+public class CustomizedRestMvcConfiguration implements RepositoryRestConfigurer {
+
+    @Override
+    public void configureRepositoryRestConfiguration(RepositoryRestConfiguration config) {
+        config.getProjectionConfiguration().addProjection(UserOnlyContainName.class);
+    }
+}
+```
