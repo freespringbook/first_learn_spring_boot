@@ -2,20 +2,13 @@ package com.community.rest;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Created by freejava1191@gmail.com on 2019-09-02
@@ -23,11 +16,12 @@ import java.util.List;
  * GitHub : https://github.com/freelife1191
  */
 @SpringBootApplication
-public class RestWebApplication {
+public class DataRestApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(RestWebApplication.class, args);
+        SpringApplication.run(DataRestApplication.class, args);
     }
+
 
     /**
      * CORS 설정

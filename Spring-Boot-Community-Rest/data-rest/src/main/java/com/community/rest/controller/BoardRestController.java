@@ -20,6 +20,7 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RepositoryRestController
+@RequestMapping("/boards")
 public class BoardRestController {
 
     private BoardRepository boardRepository;
@@ -34,8 +35,9 @@ public class BoardRestController {
      * @param pageable
      * @return
      */
-    @GetMapping("/boards")
-    public @ResponseBody Resources<Board> simpleBoard(@PageableDefault Pageable pageable) {
+    @GetMapping
+    @ResponseBody
+    public Resources<Board> simpleBoard(@PageableDefault Pageable pageable) {
         Page<Board> boardList = boardRepository.findAll(pageable);
         // 전체 페이지 수, 현재 페이지 번호, 총 게시판 수 등의 페이지 정보를 담는 PageMetadata 객체를 생성함
         PageMetadata pageMetadata = new PageMetadata(pageable.getPageSize(), boardList.getNumber(), boardList.getTotalElements());

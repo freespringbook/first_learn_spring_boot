@@ -565,3 +565,8 @@ $ curl http://localhost:8081/api/boards
 - 스프링 부트 데이터 레스트에서 제공해주는 기본 URL은 `@RepositoryRestController`를 사용하여 오버라이드 가능
 - 코드로 모든 링크를 추가하는 일은 굉장히 번거로움
   스프링 부트 데이터 레스트는 이러한 반복 작업을 일괄적으로 제공해주기 때문에 링크를 추가하는 코드를 구현할 필요가 없음
+
+### 5. 생성, 수정, 삭제 연동 테스트
+#### CORS 적용
+rest-web에 적용한 RestWebApplication 의 CORS 적용 부분 카피해서
+data-rest의 DataRestApplication 에 적용
