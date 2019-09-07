@@ -2,13 +2,20 @@ package com.community.rest;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by freejava1191@gmail.com on 2019-09-02
@@ -32,6 +39,35 @@ public class DataRestApplication {
     // 웹용 시큐리티를 활성화하는 어노테이션
     @EnableWebSecurity
     static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+        /**
+         * 인메모리 방식으로 User 정보를 관리해주는 InMemoryUserDetailsManager를 선언함
+         * 인메모리 방식은 애플리케이션이 실행될 때 메모리에서 User 정보를 관리하도록 하는 방식임
+         * 만약 User에 관한 정보를 애플리케이션 실행 중에 수정하면 애플리케이션이 셧다운될 때 수정했던 정보가 사라짐
+         * @return
+         */
+        @Bean
+        InMemoryUserDetailsManager userDetailsManager() {
+            User.UserBuilder commonUser = User.withUsername("commonUser").password("{noop}common").roles("USER");
+            /*
+                일반 User인 commonUser를 생성하고 직접 테스트할 User인 havi도 생성하여 두 User 각각 USER, ADMIN 권한을 부여함
+                스프링 시큐리티에서 제공하는 UserBuilder를 사용하면 간편하게 User를 생성할 수 있음
+                스프링 부트 2.0(Spring Security 5.0 이상)부터는 암호화 인코딩 방식을 지정해야 함
+                예를 들어 sha256 방식은 {sha256}과 같이 지정해야 함
+                예제에서는 인코딩 방식을 지정하지 않기 위해 {noop}으로 표기했음
+             */
+            User.UserBuilder havi = User.withUsername("havi").password("{noop}test").roles("USER", "ADMIN");
+
+            List<UserDetails> userDetailsList = new ArrayList<>();
+            userDetailsList.add(commonUser.build());
+            /*
+                ImMemoryUserDetailsManager 생성 시 필요한 User 목록을 생성함
+                UserBuilder를 사용했으므로 build() 메서드로 User를 만들 수 있음
+             */
+            userDetailsList.add(havi.build());
+
+            return new InMemoryUserDetailsManager(userDetailsList);
+        }
 
         @Override
         protected void configure(HttpSecurity http) throws Exception {

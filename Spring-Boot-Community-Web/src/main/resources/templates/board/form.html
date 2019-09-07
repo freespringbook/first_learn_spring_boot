@@ -87,12 +87,10 @@
             type: "POST",
             data: jsonData,
             contentType: "application/json",
-            // 시큐리티 설정이 안되있으면 401에러가 발생하므로 주석처리
-            /*
+            // 권한 인증에 대한 기본 형식 bota는 문자열을 base64로 인코딩해주는 함수
             headers: {
                 "Authorization": "Basic " + btoa("havi" + ":" + "test")
             },
-            */
             dataType: "json",
             success: function () {
                 alert('저장 성공!');

@@ -708,3 +708,94 @@ public class CustomizedRestMvcConfiguration implements RepositoryRestConfigurer 
     }
 }
 ```
+
+### 7. 각 메서드 권한 제한
+시큐리티 설정에 추가 했던 어노테이션을 이용해 권한관리  
+- `securedEnable=true` 설정 시 `@Secured` 사용가능
+- `prePostEnabled=true` 설정 시 `@PreAuthorize` 어노테이션 사용가능
+```java
+`@EnableGlobalMethodSecurity(secureEnabled=true, prePostEnabled=true)
+```
+
+##### `@Secured`
+순수하게 롤 기반으로 접근을 제한함  
+대신 `@Secured`는 권한 지정에 있어서 유연성이 떨어짐
+
+##### `@PreAuthorize`
+`@Secured`보다 더 효율적으로 권한 지정을 할 수 있음  
+권한 지정 외에도 EL 태그를 사용하여 유연한 관리가 가능함  
+Method 레벨과 Repository 레벨 모두 사용할 수 있지만 두 가지를 혼합해 사용하는 방법은 추천하지 않음
+
+1. Board의 제목만 표시하는 프로젝션 생성
+```java
+import com.community.rest.domain.Board;
+import org.springframework.data.rest.core.config.Projection;
+
+@Projection(name = "getOnlyTitle", types = { Board.class })
+public interface BoardOnlyContainTitle {
+    String getTitle();
+}
+```
+2. `@PreAuthorize`로 save 메서드에 ADMIN 권한 지정하기
+```java
+import com.community.rest.domain.Board;
+import com.community.rest.domain.projection.BoardOnlyContainTitle;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+import org.springframework.security.access.prepost.PreAuthorize;
+
+@RepositoryRestResource(excerptProjection = BoardOnlyContainTitle.class)
+public interface BoardRepository extends JpaRepository<Board, Long> {
+
+    @Override
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    <S extends Board> S save(S entity);
+}
+```
+3. 시큐리티 설정에 권한이 다른 User 추가
+```java
+@SpringBootApplication
+public class DataRestApplication {
+    ...
+    /**
+     * CORS 설정
+     */
+    @Configuration
+    // @PreAuthorize 와 @PostAuthorize 를 사용하기 위해 붙이는 어노테이션
+    @EnableGlobalMethodSecurity(prePostEnabled = true)
+    // 웹용 시큐리티를 활성화하는 어노테이션
+    @EnableWebSecurity
+    static class SecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+        /**
+         * 인메모리 방식으로 User 정보를 관리해주는 InMemoryUserDetailsManager를 선언함
+         * 인메모리 방식은 애플리케이션이 실행될 때 메모리에서 User 정보를 관리하도록 하는 방식임
+         * 만약 User에 관한 정보를 애플리케이션 실행 중에 수정하면 애플리케이션이 셧다운될 때 수정했던 정보가 사라짐
+         * @return
+         */
+        @Bean
+        InMemoryUserDetailsManager userDetailsManager() {
+            User.UserBuilder commonUser = User.withUsername("commonUser").password("{noop}common").roles("USER");
+            /*
+                일반 User인 commonUser를 생성하고 직접 테스트할 User인 havi도 생성하여 두 User 각각 USER, ADMIN 권한을 부여함
+                스프링 시큐리티에서 제공하는 UserBuilder를 사용하면 간편하게 User를 생성할 수 있음
+                스프링 부트 2.0(Spring Security 5.0 이상)부터는 암호화 인코딩 방식을 지정해야 함
+                예를 들어 sha256 방식은 {sha256}과 같이 지정해야 함
+                예제에서는 인코딩 방식을 지정하지 않기 위해 {noop}으로 표기했음
+             */
+            User.UserBuilder havi = User.withUsername("havi").password("{noop}test").roles("USER", "ADMIN");
+
+            List<UserDetails> userDetailsList = new ArrayList<>();
+            userDetailsList.add(commonUser.build());
+            /*
+                ImMemoryUserDetailsManager 생성 시 필요한 User 목록을 생성함
+                UserBuilder를 사용했으므로 build() 메서드로 User를 만들 수 있음
+             */
+            userDetailsList.add(havi.build());
+
+            return new InMemoryUserDetailsManager(userDetailsList);
+        }
+        ...
+    }
+}
+```
