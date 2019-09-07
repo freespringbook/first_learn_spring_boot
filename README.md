@@ -524,3 +524,44 @@ ex) 서버에서 한 페이지의 게시글 수를 10이 아니라 20으로 설�
 "http://localhost:8081/api/boards?page=0&size=20"과 같이 수정해야함
 
 클라이언트가 "_links"의 "first" 값을 참조하고 있었다면 서버에서 제공하는 대로 값을 받아오기 때문에 수정할 필요가 없음
+
+### 4. @RepositoryRestContriller를 사용하여 REST API 구현하기
+스프링 부트 데이터 레스트에서 따로 제공해주는 좀 더 최적화된 어노테이션  
+#### 두가지 주의사항
+1. 매핑하는 URL 형식이 스프링 부트 데이터 레스트에서 정의하는 REST API 형식에 맞아야함
+2. 기존에 기본으로 제공하는 URL 형식과 같게 제공해야 해당 컨트롤러의 메서드가 기존의 기본 API를 오버라이드 함
+
+##### API 테스트
+```bash
+$ curl http://localhost:8081/api/boards
+```
+
+##### 최적화한 /api/boards를 호출한 결과 데이터
+```json
+{
+  "_embedded" : {
+    "boards" : [ {
+      "title" : "게시글1",
+      "subTitle" : "순서1",
+      "content" : "콘텐츠1",
+      "boardType" : "free",
+      "createdDate" : "2019-09-03T23:34:17",
+      "updatedDate" : "2019-09-03T23:37:23"
+    } ]
+  },
+  "_links" : {
+    "self" : {
+      "href" : "http://localhost:8081/api/boards"
+    }
+  },
+  "page" : {
+    "size" : 10,
+    "totalElements" : 201,
+    "totalPages" : 21,
+    "number" : 0
+  }
+}
+```
+- 스프링 부트 데이터 레스트에서 제공해주는 기본 URL은 `@RepositoryRestController`를 사용하여 오버라이드 가능
+- 코드로 모든 링크를 추가하는 일은 굉장히 번거로움
+  스프링 부트 데이터 레스트는 이러한 반복 작업을 일괄적으로 제공해주기 때문에 링크를 추가하는 코드를 구현할 필요가 없음
