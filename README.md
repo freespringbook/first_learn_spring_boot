@@ -985,3 +985,67 @@ public class BoardEventTest {
     }
 }
 ```
+
+### 9. URI 처리
+URI 경로 관리
+- basePath를 '/api'로 설정 시 기본 접속 URI
+```bash
+http://localhost:8081/api/boards
+```
+
+BoardRepository 클래스에 추가되어 있는 `@RepositoryRestResource`의 path 기본값은 'boards'
+- 경로 변경 테스트를 위해 path를 'notice'로 수정하여 요청
+  ```java
+  @RepositoryRestResource(path = "notice")
+  ```
+- URI로 요청하는 모든 검색 쿼리 메서드는 search 하위로 표현됨  
+  기본 설정 URI
+  ```bash
+  http://localhost:8081/api/boards/search
+  ```
+  ##### 일치하는 제목을 찾는 쿼리 메서드 생성
+  ```java
+  import com.community.rest.domain.Board;
+  import com.community.rest.domain.projection.BoardOnlyContainTitle;
+  import org.springframework.data.jpa.repository.JpaRepository;
+  import org.springframework.data.repository.query.Param;
+  import org.springframework.data.rest.core.annotation.RepositoryRestResource;
+  import org.springframework.data.rest.core.annotation.RestResource;
+  import org.springframework.security.access.prepost.PreAuthorize;
+
+  import java.util.List;
+  /**
+  * @RepositoryRestResource 별도의 컨트롤러와 서비스 영역 없이 미리 내부적으로 정의되어 있는 로직을 따라 처리됨
+  * 그 로직은 해당 도메인의 정보를 매핑하여 REST API를 제공하는 역할을 함
+  */
+  @RepositoryRestResource(excerptProjection = BoardOnlyContainTitle.class)
+  public interface BoardRepository extends JpaRepository<Board, Long> {
+      ...
+      /**
+      * 제목을 찾는 쿼리 메서드
+      * @param title
+      * @return
+      */
+      @RestResource
+      List<Board> findByTitle(@Param("title") String title);
+  }
+  ```
+- 추가된 제목 찾는 쿼리를 호출하는 URI
+  ```bash
+  http://localhost:8081/api/boards/search/findByTitle?title=게시글1
+  ```
+  `@RestResource`의 path를 설정하지 않으면 기본값에 해당 메서드명이 적용됨  
+  'query'로 값을 변경하여 path 값을 다르게 줄 수 있음
+
+  ##### 메서드에 path 설정
+  ```java
+  @RestResource(path = "query")
+  List<Board> findByTitle(@Param("title") String title);
+  ```
+  제목을 찾는 URI에서 기존의 메서드 명인 findByTitle을 query로 변경하여 호출해야 기존의 쿼리 기능을 사용할 수 있음
+  ```bash
+  http://localhost:8081/api/boards/search/query?title=게시글1
+  ```
+특정 리포지토리, 쿼리 메서드, 필드를 노출하고 싶지 않을 때  
+exported를 false로 지정하면 됨  
+`@RestResource`는 메서드와 도메인 필드에서도 사용할 수 있음
