@@ -1,5 +1,6 @@
 package com.community.rest;
 
+import com.community.rest.event.BoardEventHandler;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
@@ -92,5 +93,14 @@ public class DataRestApplication {
                     .and().cors().configurationSource(source)
                     .and().csrf().disable();
         }
+    }
+
+    /**
+     * 이벤트 핸들러를 등록하기 위헤 빈으로 등록
+     * @return
+     */
+    @Bean
+    BoardEventHandler boardEventHandler() {
+        return new BoardEventHandler();
     }
 }

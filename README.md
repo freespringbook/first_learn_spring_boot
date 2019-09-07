@@ -799,3 +799,189 @@ public class DataRestApplication {
     }
 }
 ```
+4. 저장 요청 시 헤더에 User 정보를 포함하도록 수정
+
+ADMIN만 저장할 수 있도록 설정했음  
+아래의 코드를 포함하지 않으면 403(AccessDeniedException) 권한없음 예외가 발생함
+```javascript
+<script th:if="!${board?.idx}">
+    $('#insert').click(function () {
+        var jsonData = JSON.stringify({
+            title: $('#board_title').val(),
+            subTitle: $('#board_sub_title').val(),
+            content: $('#board_content').val(),
+            boardType: $('#board_type option:selected').val()
+        });
+        $.ajax({
+            url: "http://localhost:8081/api/boards",
+            type: "POST",
+            data: jsonData,
+            contentType: "application/json",
+            // 권한 인증에 대한 기본 형식 bota는 문자열을 base64로 인코딩해주는 함수
+            headers: {
+                "Authorization": "Basic " + btoa("havi" + ":" + "test")
+            },
+            dataType: "json",
+            success: function () {
+                alert('저장 성공!');
+                location.href = '/board/list';
+            },
+            error: function () {
+                alert('저장 실패!');
+            }
+        });
+    });
+</script>
+```
+
+### 8. 이벤트 바인딩
+스프링 부트 데이터 레스트에서는 여러 메서드의 이벤트 발생 시점을 가로채서 원하는 데이터를 추가하거나  
+검사하는 총 10개의 REST 관련 이벤트 어노테이션을 제공함
+
+각 이벤트는 `@Handle`+**이벤트명** 형태로 지원됨  
+이벤트 생성 클래스에는 `@RepositoryEventHandler`를 선언해주어 해당 클래스가 이벤트를 관리  
+어노테이션 기반 외에 직접 이벤트 등록하는 방법도 있음
+
+- `BeforeCreateEvent`: 생성하기 전의 이벤트
+- `AfterCreateEvent`: 생성한 후의 이벤트
+- `BeforeSaveEvent`: 수정하기 전의 이벤트
+- `AfterSaveEvent`: 수정한 후의 이벤트
+- `BeforeDeleteEvent`: 삭제하기 전의 이벤트
+- `AfterDeleteEvent`: 삭제한 후의 이벤트
+- `BeforeLinkSaveEvent`: 관계를 가진(1:1, M:M) 링크를 수정하기 전의 이벤트
+- `AfterLinkSaveEvent`: 관계를 가진(1:1, M:M) 링크를 수정한 후의 이벤트
+- `BeforeLinkDeleteEvent`: 관계를 가진(1:1, M:M) 링크를 삭제하기 전의 이벤트
+- `AfterLinkDeleteEvent`: 관계를 가진(1:1, M:M) 링크를 삭제한 후의 이벤트
+
+#### 1. 게시글 생성 시 생성 날짜, 수정 시 수정 날짜를 서버에서 생성하도록 설정
+```java
+import com.community.rest.domain.Board;
+import org.springframework.data.rest.core.annotation.HandleBeforeCreate;
+import org.springframework.data.rest.core.annotation.HandleBeforeSave;
+import org.springframework.data.rest.core.annotation.RepositoryEventHandler;
+
+/**
+ * Created by freejava1191@gmail.com on 2019-09-07
+ * Blog : https://freedeveloper.tistory.com/
+ * GitHub : https://github.com/freelife1191
+ *
+ * 게시글 생성 시 생성 날짜, 수정 시 수정 날짜를 서버에서 생성하도록 설정하는 이벤트 핸들러
+ */
+@RepositoryEventHandler
+public class BoardEventHandler {
+
+    /**
+     * 게시글의 생성 날짜를 현재 시간으로 할당
+     * @param board
+     */
+    @HandleBeforeCreate
+    public void beforeCreateBoard(Board board) {
+        board.setCreatedDateNow();
+    }
+
+    /**
+     * 게시글의 수정 날짜를 현재 시간으로 할당
+     * @param board
+     */
+    @HandleBeforeSave
+    public void beforeSaveBoard(Board board) {
+        board.setUpdatedDateNow();
+    }
+}
+```
+
+스프링 부트 데이터 레스트 이벤트를 적용하는 두가지 방법
+
+- 수동으로 이벤트를 적용하는 ApplicationListener를 사용하는 방법  
+  AbstractRepositoryEventListener를 상속받고 관련 메서드를 오버라이드하여 원하는 이벤트만 등록할 수 있음
+- 사용한 어노테이션을 기반으로 하는 이벤트 처리 방법  
+  생성한 이벤트 핸들러 클래스에는 `@RepositoryEventHandler` 어노테이션이 선언되어 있어야 함  
+  이 어노테이션은 BeanPostProcessor에 클래스가 검사될 필요가 있음을 알려줌
+
+
+이벤트 핸들러를 등록하려면 `@Component`를 상용하거나 직접 ApplicationContext에 빈으로 등록해야 함
+
+#### 2. BoardEventHandler 빈으로 등록
+```java
+import com.community.rest.event.BoardEventHandler;
+...
+@SpringBootApplication
+public class DataRestApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(DataRestApplication.class, args);
+    }
+
+    ...
+
+    @Bean
+    BoardEventHandler boardEventHandler() {
+        return new BoardEventHandler();
+    }
+}
+```
+
+#### 3. 게시판 글 생성, 수정에 대한 이벤트 테스트 작성
+```java
+import com.community.rest.domain.Board;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.test.context.junit4.SpringRunner;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@RunWith(SpringRunner.class)
+/*
+    스프링 부트 데이터 레스트를 테스트하기 위해 시큐리티 설정이 들어 있는 DataRestApplication 클래스를 주입함
+    포트도 설정에 정의되어 있는 8081을 동일하게 사용하기 위해 DEFINED_PORT로 지정하여 사용함
+ */
+@SpringBootTest(classes = DataRestApplication.class, webEnvironment = SpringBootTest.WebEnvironment.DEFINED_PORT)
+/*
+    @AutoConfigureTestDatabase 어노테이션은 H2가 build.gradle의 클래스 경로에 포함되어 있으면 자동으로 H2를 테스트 데이터베이스로 지정함
+    만약 이 어노테이션을 사용하지 않는다면 테스트에서 Board를 저장할 때마다 실제 데이터베이스에 반영될 겁니다
+ */
+@AutoConfigureTestDatabase
+public class BoardEventTest {
+    /*
+        TestRestTemplate은 RestTemplate을 래핑한 객체로서 GET, POST, PUT, DELETE와 같은 HttpRequest를 편하게 테스트하도록 도와줌
+        예제에서처럼 시큐리티 설정에 ADMIN으로 생성한 'havi'의 정보를 파라미터로 넣어주면 해당 아이디로 권한 인증이 통과됨
+        이와 같은 설정을 해주는 이유는 '각 메서드 권한 제한'에서 저장한 메서드에 권한을 ADMIN으로 설정했기 때문
+     */
+    private TestRestTemplate testRestTemplate = new TestRestTemplate("havi", "test");
+
+    @Test
+    public void 저장할때_이벤트가_적용되어_생성날짜가_생성되는가() {
+        /*
+            Board에 title 값만 부여하여 저장했음
+            저장된 Board 객체의 createdDate 값이 null이 아니라면 beforeCreateBoard 메서드가 Board 객체가 저장되기 전에 제대로 실행된 것임
+         */
+        Board createdBoard = createBoard();
+        assertThat(createdBoard.getCreatedDate()).isNotNull();
+    }
+
+    @Test
+    public void 수정할때_이벤트가_적용되어_수정날짜가_생성되는가() {
+        Board createdBoard = createBoard();
+        /*
+            수정 시 이벤트가 적용되는지 테스트하기 위해 createBoard 메서드를 재사용하여 Board 객체를 생성하고 updateBoard 메서드를 통해 PUT 방식으로 데이터를 수정하는 요청을 보냈음
+            수정이 정상적으로 완료된 Board 객체의 updatedDate 값이 null이 아니라면 설정했던 beforeSaveBoard 메서드가 수정되기 전에 제대로 실행된 것임
+         */
+        Board updatedBoard = updatedBoard(createdBoard);
+        assertThat(updatedBoard.getUpdatedDate()).isNotNull();
+    }
+
+    private Board createBoard() {
+        Board board = Board.builder().title("저장 이벤트 테스트").build();
+        return testRestTemplate.postForObject("http://127.0.0.1:8081/api/boards", board, Board.class);
+    }
+
+    private Board updatedBoard(Board createdBoard) {
+        String updateUri = "http://127.0.0.1:8081/api/boards/1";
+        testRestTemplate.put(updateUri, createdBoard);
+        return testRestTemplate.getForObject(updateUri, Board.class);
+    }
+}
+```
