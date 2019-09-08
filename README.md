@@ -44,7 +44,8 @@
 2. 처리(processing): 원하는 방식으로 데이터를 가공/처리함
 3. 쓰기(write): 수정된 데이터를 다시 저장소(데이터베이스)에 저장함
 
-![배치 관련 객체 관계도](/images/배치&#32;관련&#32;객체&#32;관계도.png)
+![배치 관련 객체 관계도](/images/batch_object_relationship.png)
+
 Job 이라는 하나의 큰 일감(Job)에 여러 단계(Step)를 두고, 각 단계를 배치의 기본 흐름대로 구현함
 
 ### 1. Job
@@ -283,3 +284,6 @@ public interface ItemWriter<T> {
 커뮤니티에 가입한 회원중 1년이 지나도록 상태 변화가 없는 회원을 휴면회원으로 전환하는 배치 개발
 
 ![전체 배치 프로세스](/images/all_batch_process.png)
+1. H2 DB에 저장된 데이터 중 1년간 업데이트되지 않은 사용자를 찾는 로직을 ItemReader로 구현
+2. 대상 사용자 데이터의 상탯값을 휴면회원으로 전환하는 프로세스를 ItemProcessor에 구현
+3. 상탯값이 변한 휴면회원을 실제로 DB에 저장하는 ItemWriter를 구현
