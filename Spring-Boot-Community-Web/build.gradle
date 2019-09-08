@@ -1,7 +1,7 @@
 //1. 빌드 스크립트 내부에 버전, 의존 라이브럴, 저장소를 설정해 스프링 부트 플러그인을 사용할 수 있게 함
 buildscript {
     ext {
-        springBootVersion = '2.1.7.RELEASE'
+        springBootVersion = '2.1.8.RELEASE'
     }
     repositories {
         mavenCentral()

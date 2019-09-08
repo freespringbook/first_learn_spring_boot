@@ -278,3 +278,8 @@ public interface ItemWriter<T> {
 	void write(List<? extends T> items) throws Exception;
 }
 ```
+
+## 7.3 스프링 부트 휴면회원 배치 설계하기
+커뮤니티에 가입한 회원중 1년이 지나도록 상태 변화가 없는 회원을 휴면회원으로 전환하는 배치 개발
+
+![전체 배치 프로세스](/images/all_batch_process.png)
