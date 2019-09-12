@@ -287,3 +287,11 @@ public interface ItemWriter<T> {
 1. H2 DB에 저장된 데이터 중 1년간 업데이트되지 않은 사용자를 찾는 로직을 ItemReader로 구현
 2. 대상 사용자 데이터의 상탯값을 휴면회원으로 전환하는 프로세스를 ItemProcessor에 구현
 3. 상탯값이 변한 휴면회원을 실제로 DB에 저장하는 ItemWriter를 구현
+
+## 7.4 스프링 부트 배치 설정하기
+배치 프로젝트 생성 'Spring-Boot-Community-Bathch'
+
+1. build.gradle 의존성 설정
+2. UserStatus, SocialType Enum
+3. Grade Enum
+4. User 클래스
