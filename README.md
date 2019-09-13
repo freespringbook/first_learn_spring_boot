@@ -295,3 +295,56 @@ public interface ItemWriter<T> {
 2. UserStatus, SocialType Enum
 3. Grade Enum
 4. User 클래스
+
+## 7.5 스프링 부트 휴면회원 배치 구현하기
+1. 휴면회원 배치 테스트 코드 생성
+2. 휴면회원 배치 정보 설정
+3. SQL로 테스트 데이터 주입하기
+
+### 1. 휴면회원 배치 테스트 코드 생성
+1. JobLuncherTestUtils 설정 - TestJobConfig.java
+	#### `@EnableBatchProcessing`
+	스프링 부트 배치 스타터에 미리 정의된 설정들을 실행시키는 마법의 어노테이션  
+	배치에 필요한 JobBuilder, StepBuilder, JobRepository, JobLauncher 등 다양한 설정이 자동으로 주입됨
+2. 휴면회원 전환 테스트 코드 작성 - InactiveUserJobTest.java
+3. 타깃 휴면회원 검색 쿼리 생성 - UserRepository.java
+
+### 2. 휴면회원 배치 정보 설정
+아래의 순서로 Job 설정 만들기 
+1. 휴면회원 Job 설정
+2. 휴면회원 Step 설정
+3. 휴면회원 Reader, Processor, Writer 설정
+
+배치 정보는 `@Configuration` 어노테이션을 사용하는 설정 클래스에 빈으로 등록함
+
+##### 1. 휴면회원 배치 Job 빈으로 등록(휴면회원 배치 Job 생성 메서드 추가) - InactiveUserJobConfig.java
+- Job 생성을 직관적이고 편리하게 도와주는 빌더인 JobBuilderFactory를 주입  
+  빈에 주입할 객체를 파라미터로 명시하면 @Autowired 어노테이션을 쓰는 것과 같은 효과가 있음
+- JobBuilderFactory의 get("inactiveUserJob")은'inactiveUserJob'이라는 이름의 JobBuilder를 생성  
+  preventRestart()는 Job의 재실행을 막음
+- start(inactiveJobStep)은 파라미터에서 주입받은 휴면회원 관련 Step인 inactiveJobStep을 제일 먼저 실행하도록 설정하는 부분임  
+  inactiveJobStep은 앞선 inactiveUserJob과 같이 InactiveUserJobConfig 클래스에 빈으로 등록
+##### 2. 휴면회원 배치 Step 빈으로 등록(휴면회원 배치 Step 생성 메서드 추가) 
+- StepBuilderFactory의 get("inactiveUserStep")은 'inactiveUserStep'이라는 이름의 StepBuilder를 생성함
+- 제네릭을 사용해 chunk()의 입력 타입과 출력 타입을 User 타입으로 설정했음  
+  chunk의 인잣값은 10으로 설정했는데 쓰기 시에 청크 단위로 묶어서 writer() 메서드를 실행시킬 단위를 지정한 것  
+	즉, 커밋의 단위가 10개 임
+- Step의 reader.processor.writer를 각각 설정했음
+##### 3. 휴면회원 배치 Reader 빈으로 등록(휴면회원 배치 Reader 생성 메서드 추가)
+- 기본 빈 생성은 싱글턴이지만 @StepScope를 사용하면 해당 메서드는 Step의 주기에 따라 새로운 빈을 생성함  
+  즉, 각 Step의 실행마다 새로운 빈을 만들기 때문에 지연 생성이 가능함  
+	주의할 사항은 @StepScope는 기본 프록시 모드가 반환되는 클래스 타입을 참조하기 때문에 @StepScope를 사용하면 반드시 구현된 반환 타입을 명시해 반환해야 함  
+	여기서는 반환 타입을 `QueueItemReader<User>`라고 명시했음
+- 현재 날짜 기준 1년 전의 날짜값과 User의 상태값이 ACTIVE인 User 리스트를 불러오는 쿼리
+- QueueItemReader 객체를 생성하고 불러온 휴면회원 타깃 대상 데이터를 객체에 넣어 반환
+##### 4. 큐를 사용한 Reader 객체 QueueItemReader를 별도로 생성 - QueueItemReader.java
+- QueueItemReader를 사용해 휴면회원으로 지정될 타깃 데이터를 한번에 불러와 큐에 담아놓음
+- read() 메서드를 사용할 때 큐의 poll() 메서드를 사용하여 큐에서 데이터를 하나씩 반환함
+##### 5. 휴면회원으로 전환시키는 inactiveUserProcessor 생성 메서드 추가
+- reader에서 읽은 User를 휴면 상태로 전환하는 processor 메서드
+##### 6. 휴면회원을 DB에 저장하는 inactiveUserWriter 생성 메서드 추가
+- 휴면회원을 DB에 저장
+- 리스트 타입을 앞서 설정한 청크 단위로 받음
+- 청크 단위를 10으로 설정했으므로 users에는 휴면회원 10개가 주어지며 saveAll() 메서드를 사용해서 한번에 DB에 저장함
+##### 7. BatchApplication 클래스에 `@EnableBatchProcessing` 어노테이션 추가
+- 배치 작업에 필요한 빈을 미리 등록하여 사용할 수 있도록 해줌
