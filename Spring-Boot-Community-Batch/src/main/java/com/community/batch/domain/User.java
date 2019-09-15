@@ -1,6 +1,7 @@
 package com.community.batch.domain;
 
 import com.community.batch.domain.enums.Grade;
+import com.community.batch.domain.enums.SocialType;
 import com.community.batch.domain.enums.UserStatus;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -42,6 +43,10 @@ public class User implements Serializable {
     @Column
     private String principle;
 
+    @Column
+    @Enumerated(EnumType.STRING)
+    private SocialType socialType;
+
     // UserStatus Enum 필드
     @Column
     @Enumerated(EnumType.STRING)
@@ -59,11 +64,12 @@ public class User implements Serializable {
     private LocalDateTime updatedDate;
 
     @Builder
-    public User(String name, String password, String email, String principle, UserStatus status, Grade grade, LocalDateTime createdDate, LocalDateTime updatedDate) {
+    public User(String name, String password, String email, String principle, SocialType socialType, UserStatus status, Grade grade, LocalDateTime createdDate, LocalDateTime updatedDate) {
         this.name = name;
         this.password = password;
         this.email = email;
         this.principle = principle;
+        this.socialType = socialType;
         this.status = status;
         this.grade = grade;
         this.createdDate = createdDate;

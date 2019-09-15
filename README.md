@@ -348,3 +348,10 @@ public interface ItemWriter<T> {
 - 청크 단위를 10으로 설정했으므로 users에는 휴면회원 10개가 주어지며 saveAll() 메서드를 사용해서 한번에 DB에 저장함
 ##### 7. BatchApplication 클래스에 `@EnableBatchProcessing` 어노테이션 추가
 - 배치 작업에 필요한 빈을 미리 등록하여 사용할 수 있도록 해줌
+
+### 3. SQL로 테스트 데이터 주입하기
+스프링 부트에서 SQL 파일을 이용해 테스트 데이터를 생성하여 저장
+
+##### 휴면회원의 대상에 대한 데이터 삽입 쿼리를 `import.sql` 파일로 생성
+**/resources** 하위 경로에 `import.sql` 파일을 생성해놓으면 스프링 부트가 실행될 때 자동으로 해당 파일의 쿼리를 실행함  
+`import.sql`은 하이버네이트가 `data.sql`은 스프링 jdbc가 실행함
