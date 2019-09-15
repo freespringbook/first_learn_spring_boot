@@ -355,3 +355,50 @@ public interface ItemWriter<T> {
 ##### 휴면회원의 대상에 대한 데이터 삽입 쿼리를 `import.sql` 파일로 생성
 **/resources** 하위 경로에 `import.sql` 파일을 생성해놓으면 스프링 부트가 실행될 때 자동으로 해당 파일의 쿼리를 실행함  
 `import.sql`은 하이버네이트가 `data.sql`은 스프링 jdbc가 실행함
+
+## 7.6 스프링 배치 심화학습
+1. 다양한 ItemReader 구현 클래스
+2. 다양한 ItemWriter 구현 클래스
+3. JobParameter 사용하기
+4. 테스트 시에만 H2 DB를 사용하도록 설정하기
+5. 청크 지향 프로세싱
+6. 배치의 인터셉터 Listener 설정하기
+7. 어노테이션 기반으로 Listener 설정하기
+8. Step의 흐름을 제어하는 Flow
+
+### 1. 다양한 ItemReader 구현 클래스
+스프링 배치 프로젝트에서는 각각의 상황에 맞는 다양한 `ItemReader` 구현체를 제공함  
+그 중 하나가 리스트 타입으로 Reader를 구현한 `ListItemReader` 객체임  
+`QueueItemReader` 객체와 동일한 역할을 수행함
+
+#### 배치 프로젝트에서 제공하는 ListItemReader 객체 사용하기
+`ListItemReader` 객체를 사용하면 모든 데이터를 한번에 가져와 메모리에 올려놓고 `read(`) 메서드로 하나씩 배치 처리 작업을 수행할 수 있음
+
+수백, 수천을 넘어 수십만 개 이상의 데이터를 한번에 가져와 메모리에 올려놓아야 할 때는 `PagingItemReader` 구현체를 사용할 수 있음  
+구현체는 `JdbcPagingItemReader`, `JpaPagingItemReader`, `HibernatePagingItemReader` 가 있음  
+
+`JpaPagingItemReader`에는 지정한 데이터 크기만큼 DB에서 읽어오는 `setPageSize()` 메서드라는 기능이 있음  
+모든 데이터를 한번에 가져오는 것이 아니라 지정한 단위로 가져와 배치 처리를 수행함
+
+#### JpaPagingItemReader를 사용해 원하는 크기만큼 읽어오기
+1. 스프링에서 `destroyMethod`를 사용해 삭제할 빈을 자동으로 추적함  
+	 `destroyMethod=""`와 같이 하여 기능을 사용하지 않도록 설정하면 실행 시 출력되는 다음과 같은 **warning** 메시지를 삭제할 수 있다
+2. `JpaPagingItemReader`를 사용하려면 쿼리를 직접 짜서 실행하는 방법밖에 없음
+	 마지막 정보 갱신 일자를 나타내는 **updatedDate** 파라미터와 상태값을 나타내는 **status** 파라미터를 사용해 쿼리를 작성함
+3. 쿼리에서 사용된 **updatedDate.status** 파라미터를 Map에 추가해 사용할 파라미터를 설정함
+4. 트랜잭션을 관리해줄 `entityManagerFactory` 를 설정함
+5. 한번에 읽어올 크기를 15개로 설정함
+
+##### 주의사항
+`JpaPagingItemReader` 는 내부에 **entityManager** 를 할당받아 사용하는데 지정한 크기로 데이터를 읽어옴
+
+**inactiveJobStep()** 에서 설정한 청크단위가 5개라면 item 5를 writer까지 패치처리르 진행하고 저장한뒤  
+저장된 데이터를 바탕으로 다음에 다시 지정한 크기로 새 인덱스를 할당해 읽어 와야 하는데  
+entityManager에서 앞서 처리된 item 5개 때문에 새로 불러올 Item의 인덱스 시작점이 5로 설정되어 있게 됨
+
+청크 단위로 Item 5개를 커밋하고 다음 청크 단위로 넘어가야 하는 경우
+쿼리 요청시 offset 5(인덱스값), limit 5(지정한 크기 단위)이므로 개념상 바로 다음 청크 단위(Item 5개)인 Item을 건너뛰는 상황이 발생함
+
+##### 해결방법
+조회용 인덱스값을 항상 0으로 반환하여 item 5개를 수정하고
+다음 5개를 건너뛰지 않고 원하는 순서/청크 단위로 처리가 가능해짐
