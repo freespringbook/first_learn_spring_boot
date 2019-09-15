@@ -1,4 +1,4 @@
-package com.community.batch.jobs;
+package com.community.batch.jobs.inactive;
 
 import com.community.batch.domain.User;
 import com.community.batch.domain.enums.UserStatus;

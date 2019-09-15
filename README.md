@@ -454,6 +454,8 @@ spring:
 ```
 
 #### 3. `@AutoConfigureTestDatabase`를 사용해서 테스트 데이터베이스 설정
+datasource 프로퍼티를 기반으로 자동으로 설정된 데이터베이스를 무시하고 테스트용 클래스에서 사용할 데이터베이스가 적용되게 함
+
 ```java
 ...
 import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
@@ -467,3 +469,39 @@ public class InactiveUserJobTest {
 	...
 }
 ```
+
+### 5. 청크 지향 프로세싱
+청크 지향 프로세싱(chunk oriented processing)은 트랜잭션 경계 내에서 청크 단위로 데이터를 읽고 생성하는 프로그래밍 기법
+
+청크란 아이템이 트랜잭션에서 커밋되는 수
+
+read한 데이터 수가 지정한 청크 단위와 일치하면 write를 수행하고 트랜잭션을 커밋함
+
+##### 청크 지향 프로세싱의 이점
+1000여 개의 데이터에 대해 배치 로직을 실행한다고 가정할 때 청크로 나누지 않았을 때는 하나만 실패해도 다른 성공한 999개의 데이터가 롤백되지만  
+청크 단위를 10으로 해서 배치 처리르 하면 도중에 배치 처리에 실패 하더라도 다른 청크는 영향을 받지 않음
+
+#### 청크 지향 프로세싱 프로세스
+![청크 지향 프로세싱 프로세스](images/chunk_oriented_process.png)
+
+##### 청크 지향 프로세싱이 아닌 방식
+Tasklet를 사용한 방식
+
+Tasklet은 임의의 Step을 실행할 떄 하나의 작업으로 처리하는 방식
+
+읽기, 처리, 쓰기로 나뉜 방식이 청크 지향 프로세싱이라면 이를 단일 작업으로 만드는 개념이 Tasklet 임
+
+#### Tasklet 인터페이스
+```java
+public interface Tasklet {
+	@Nullable
+	RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) throws Exception;
+}
+```
+`Tasklet` 인터페이스는 `execute()` 메서드 하나만 제공함
+
+내부에 원하는 단일 작업을 구현하고 작업이 끝나면 `RepeatStatus.FINISHED`를 반환하고  
+작업이 계속된다면 `RepeatStatus.CONTINUABLE`을 반환함
+
+#### 휴면회원 배치 처리를 Tasklet으로 전환
+기존의 읽기 -> 처리 -> 쓰기로 진행되었던 청크 지향 프로세싱 방식의 구조를 하나로 합쳐놓음
