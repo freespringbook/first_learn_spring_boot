@@ -389,7 +389,7 @@ public interface ItemWriter<T> {
 4. 트랜잭션을 관리해줄 `entityManagerFactory` 를 설정함
 5. 한번에 읽어올 크기를 15개로 설정함
 
-##### 주의사항
+##### ▶ 주의사항
 `JpaPagingItemReader` 는 내부에 **entityManager** 를 할당받아 사용하는데 지정한 크기로 데이터를 읽어옴
 
 **inactiveJobStep()** 에서 설정한 청크단위가 5개라면 item 5를 writer까지 패치처리르 진행하고 저장한뒤  
@@ -402,3 +402,8 @@ entityManager에서 앞서 처리된 item 5개 때문에 새로 불러올 Item�
 ##### 해결방법
 조회용 인덱스값을 항상 0으로 반환하여 item 5개를 수정하고
 다음 5개를 건너뛰지 않고 원하는 순서/청크 단위로 처리가 가능해짐
+
+### 2. 다양한 ItemWriter 구현 클래스
+JPA를 사용하고 있으므로 JpaItemWriter를 적용
+
+제네릭에 저장할 타입을 명시하고 EntityManagerFactory만 설정하면 Processor에서 넘어온 데이터를 청크 단위로 저장함
