@@ -428,3 +428,42 @@ JPA를 사용하고 있으므로 JpaItemWriter를 적용
 - SpEL을 사용해 JobParameters에서 nowDate 파라미터를 전달받음
 	Date 타입으로 주입해서 곧바로 Date 타입으로 전달받을 수 있음
 - 전달받은 현재 날짜값을 UserRepository에서 사용할 수 있는 타입인 LocalDateTime으로 전환함
+
+### 4. 테스트 시에만 H2 데이터베이스를 사용하도록 설정하기
+
+#### 1. MySQL 의존성 추가
+build.gradle 파일에 MySQL 런타임 의존성 추가 설정
+
+```groovy
+runtime('mysql:mysql-connector-java')
+```
+
+#### 2. `application.yml`에 MySQL을 사용하도록 설정
+```yaml
+spring:
+  datasource:
+    url: jdbc:mysql://127.0.0.1:3306/{DB명}
+    username: {아이디}
+    password: {패스워드}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    show-sql: true
+    hibernate:
+			# 테스트용 테이블 생성 설정(애플리케이션 재기동 시 테이블이 삭제 되고 새롭게 생성됨)
+      ddl-auto: create
+```
+
+#### 3. `@AutoConfigureTestDatabase`를 사용해서 테스트 데이터베이스 설정
+```java
+...
+import org.springframework.boot.jdbc.EmbeddedDatabaseConnection;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+
+@RunWith(SpringRunner.class)
+@SpringBootTest
+// 테스트 시에는 H2를 사용하도록 설정
+@AutoConfigureTestDatabase(connection = EmbeddedDatabaseConnection.H2)
+public class InactiveUserJobTest {
+	...
+}
+```
