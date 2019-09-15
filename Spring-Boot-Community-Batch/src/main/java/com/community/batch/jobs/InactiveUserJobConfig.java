@@ -2,7 +2,6 @@ package com.community.batch.jobs;
 
 import com.community.batch.domain.User;
 import com.community.batch.domain.enums.UserStatus;
-import com.community.batch.jobs.readers.QueueItemReader;
 import com.community.batch.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.batch.core.Job;
@@ -11,18 +10,17 @@ import org.springframework.batch.core.configuration.annotation.JobBuilderFactory
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
-import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.JpaItemWriter;
-import org.springframework.batch.item.database.JpaPagingItemReader;
 import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import javax.persistence.EntityManagerFactory;
 import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Created by freejava1191@gmail.com on 2019-09-13
@@ -53,13 +51,28 @@ public class InactiveUserJobConfig {
     }
 
     @Bean
-    public Step inactiveJobStep(StepBuilderFactory stepBuilderFactory, JpaPagingItemReader<User> inactiveUserJpaReader) {
+    public Step inactiveJobStep(StepBuilderFactory stepBuilderFactory, ListItemReader<User> inactiveUserReader) {
         return stepBuilderFactory.get("inactiveUserStep")
                 .<User, User> chunk(CHUNK_SIZE)
-                .reader(inactiveUserJpaReader)
+                .reader(inactiveUserReader)
                 .processor(inactiveUserProcessor())
                 .writer(inactiveUserWriter())
                 .build();
+    }
+
+    /**
+     * ListItemReader 객체를 사용하면 모든 데이터를 한번에 가져와 메모리에 올려놓고 read() 메서드로 하나씩 배치 처리 작업을 수행할 수 있음
+     * SpEL을 사용해 JobParameters에서 nowDate 파라미터를 전달받음
+     * Date 타입으로 주입해서 곧바로 Date 타입으로 전달받을 수 있음
+     * @return
+     */
+    @Bean
+    @StepScope
+    public ListItemReader<User> inactiveUserReader(@Value("#{jobParameters[nowDate]}") Date nowDate, UserRepository userRepository) {
+        // 전달받은 현재 날짜값을 UserRepository에서 사용할 수 있는 타입인 LocalDateTime으로 전환함
+        LocalDateTime now = LocalDateTime.ofInstant(nowDate.toInstant(), ZoneId.systemDefault());
+        List<User> inactiveUsers = userRepository.findByUpdatedDateBeforeAndStatusEquals(now.minusYears(1), UserStatus.ACTIVE);
+        return new ListItemReader<>(inactiveUsers);
     }
 
     /**
@@ -72,24 +85,22 @@ public class InactiveUserJobConfig {
         스프링에서 destroyMethod를 사용해 삭제할 빈을 자동으로 추적함
         destroyMethod=""와 같이 하여 기능을 사용하지 않도록 설정하면 실행 시 출력되는 다음과 같은 warning 메시지를 삭제할 수 있다
      */
+    /*
     @Bean(destroyMethod = "")
     @StepScope
     public JpaPagingItemReader<User> inactiveUserJpaReader() {
 
-        /*
-            조회용 인덱스값을 항상 0으로 반환하여 item 5개를 수정하고
-            다음 5개를 건너뛰지 않고 원하는 순서/청크 단위로 처리가 가능해짐
-         */
+
+        // 조회용 인덱스값을 항상 0으로 반환하여 item 5개를 수정하고
+        // 다음 5개를 건너뛰지 않고 원하는 순서/청크 단위로 처리가 가능해짐
         JpaPagingItemReader<User> jpaPagingItemReader = new JpaPagingItemReader<>(){
             @Override
             public int getPage() {
                 return 0;
             }
         };
-        /*
-            JpaPagingItemReader를 사용하려면 쿼리를 직접 짜서 실행하는 방법밖에 없음
-            마지막 정보 갱신 일자를 나타내는 updatedDate 파라미터와 상태값을 나타내는 status 파라미터를 사용해 쿼리를 작성함
-         */
+        // JpaPagingItemReader를 사용하려면 쿼리를 직접 짜서 실행하는 방법밖에 없음
+        // 마지막 정보 갱신 일자를 나타내는 updatedDate 파라미터와 상태값을 나타내는 status 파라미터를 사용해 쿼리를 작성함
         jpaPagingItemReader.setQueryString("select u from User as u where u.updatedDate < :updatedDate and u.status = :status");
 
         Map<String, Object> map = new HashMap<>();
@@ -105,18 +116,7 @@ public class InactiveUserJobConfig {
         jpaPagingItemReader.setPageSize(CHUNK_SIZE);
         return jpaPagingItemReader;
     }
-
-
-    /**
-     * ListItemReader 객체를 사용하면 모든 데이터를 한번에 가져와 메모리에 올려놓고 read() 메서드로 하나씩 배치 처리 작업을 수행할 수 있음
-     * @return
-     */
-    @Bean
-    @StepScope
-    public ListItemReader<User> inactiveUserReader() {
-        List<User> oldUsers = userRepository.findByUpdatedDateBeforeAndStatusEquals(LocalDateTime.now().minusYears(1), UserStatus.ACTIVE);
-        return new ListItemReader<>(oldUsers);
-    }
+    */
 
     /**
      * reader에서 읽은 User를 휴면 상태로 전환하는 processor 메서드
