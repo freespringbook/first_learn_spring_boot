@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import javax.persistence.EntityManagerFactory;
 
@@ -44,7 +45,7 @@ import lombok.AllArgsConstructor;
 public class InactiveUserJobConfig {
 
     // 한번에 읽어올 크기
-    private final static int CHUNK_SIZE = 15;
+    private final static int CHUNK_SIZE = 5;
 
     private final EntityManagerFactory entityManagerFactory;
     private TaskExecutor taskExecutor;
@@ -65,8 +66,9 @@ public class InactiveUserJobConfig {
     // Job 생성을 직관적이고 편리하게 도와주는 빌더인 JobBuilderFactory를 주입
     // 빈에 주입할 객체를 파라미터로 명시하면 @Autowired 어노테이션을 쓰는 것과 같은 효과가 있음
     public Job InactiveUserJob(JobBuilderFactory jobBuilderFactory, InactiveIJobListener inactiveIJobListener,
-                               Step inactiveJobStep
+                               // Step inactiveJobStep
                                // Flow inactiveJobFlow
+                               Flow multiFlow
                                ) {
         // JobBuilderFactory의 get("inactiveUserJob")은'inactiveUserJob'이라는 이름의 JobBuilder를 생성
         return jobBuilderFactory.get("inactiveUserJob")
@@ -74,10 +76,11 @@ public class InactiveUserJobConfig {
                 .listener(inactiveIJobListener)
                 // start(inactiveJobStep)은 파라미터에서 주입받은 휴면회원 관련 Step인 inactiveJobStep을 제일 먼저 실행하도록 설정하는 부분임
                 // inactiveJobStep은 앞선 inactiveUserJob과 같이 InactiveUserJobConfig 클래스에 빈으로 등록
-                .start(inactiveJobStep)
+                // .start(inactiveJobStep)
                 // inactiveUserJob 시작 시 Flow를 거쳐 Step을 실행하도록 inactiveJobFlow를 start()에 설정
                 // .start(inactiveJobFlow)
-                // .end()
+                .start(multiFlow)// 빈으로 등록한 multiFlow 설정으로 시작
+                .end()
                 .build();
     }
 
@@ -145,13 +148,30 @@ public class InactiveUserJobConfig {
         return new ListItemReader<>(inactiveUsers);
     }
 
+    @Bean
+    public Flow multiFlow(Step inactiveJobStep) {
+        Flow flows[] = new Flow[5];
+        // IntStream을 이용해 flows 배열의 크기(5개)만큼 반복문을 돌림
+        // FlowBuilder 객체로 Flow(inactiveJobFlow) 5개를 생성해서 flows 배열에 할당함
+        IntStream.range(0, flows.length).forEach(i -> flows[i] = new FlowBuilder<Flow>("MultiFlow"+i).from(inactiveJobFlow(inactiveJobStep)).end());
+        FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("MultiFlowTest");
+        return flowBuilder
+                .split(taskExecutor) // multiFlow에서 사용할 TaskExecutor를 등록함
+                .add(flows) // inactiveJobFlow 5개가 할당된 flows 배열을 추가함
+                .build();
+    }
+
     /**
      * 조건에 따라 Step의 실행 여부를 처리하는 inactiveJobFlow 설정하기
+     *
+     * 빈은 기본적으로 싱글턴으로 등록되기 때문에 여러 inactiveJobFlow를 각각 생성하려면
+     * @Bean 어노테이션을 제거하여 빈이 아닌 일반 객체를 생성해 반환하도록 설정해야 함
+     *
      * @param inactiveJobStep
      * @return
      */
     @Bean
-    public Flow inactiveJobFlow(Step inactiveJobStep) {
+    Flow inactiveJobFlow(Step inactiveJobStep) {
         // FlowBuilder를 사용하면 Flow 생성을 한결 편하게 할 수 있음
         // FlowBuilder의 생성자에 원하는 Flow 이름을 넣어서 생성함
         FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("inactiveJobFlow");
