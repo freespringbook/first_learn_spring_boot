@@ -646,3 +646,10 @@ public class InactiveUserJobConfig {
 5. 기본의 **inactiveJobFlow**는 빈으로 등록되어 있음
    빈은 기본적으로 싱글턴으로 등록되기 때문에 여러 **inactiveJobFlow**를 각각 생성하려면
 	 `@Bean` 어노테이션을 제거하여 빈이 아닌 일반 객체를 생성해 반환하도록 설정해야 함
+
+### 3. 파티셔닝을 사용한 병렬 프로그래밍
+#### 파티셔닝의 원리
+파티셔너(partitioner)로 구분된 각 Step에 스레드를 할당해 병렬적으로 실행시키는 방법
+
+#### 파티셔닝 작업 단계
+![파티셔닝 작업 단계](images/partitioner_job_step.png)

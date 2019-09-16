@@ -1,14 +1,19 @@
 package com.community.batch.jobs.inactive;
 
 import com.community.batch.domain.User;
+import com.community.batch.domain.enums.Grade;
 import com.community.batch.domain.enums.UserStatus;
+import com.community.batch.jobs.inactive.listener.InactiveChunkListener;
 import com.community.batch.jobs.inactive.listener.InactiveIJobListener;
 import com.community.batch.jobs.inactive.listener.InactiveStepListener;
 import com.community.batch.repository.UserRepository;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
+import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.JobScope;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.job.builder.FlowBuilder;
@@ -40,26 +45,21 @@ import lombok.AllArgsConstructor;
  * Blog : https://freedeveloper.tistory.com/
  * GitHub : https://github.com/freelife1191
  */
+@Slf4j
 @Configuration
-// @AllArgsConstructor
+@AllArgsConstructor
 public class InactiveUserJobConfig {
 
     // 한번에 읽어올 크기
     private final static int CHUNK_SIZE = 5;
-
     private final EntityManagerFactory entityManagerFactory;
-    private TaskExecutor taskExecutor;
 
-    public InactiveUserJobConfig(EntityManagerFactory entityManagerFactory) {
-        this.entityManagerFactory = entityManagerFactory;
-        this.taskExecutor = new SimpleAsyncTaskExecutor("Batch_Task");
-    }
 
     /**
      * 휴면회원 배치 Job 빈으로 등록(휴면회원 배치 Job 생성 메서드 추가)
      * @param jobBuilderFactory
      * @param inactiveIJobListener
-     * @param multiFlow
+     * @param partitionerStep
      * @return
      */
     @Bean
@@ -68,46 +68,71 @@ public class InactiveUserJobConfig {
     public Job InactiveUserJob(JobBuilderFactory jobBuilderFactory, InactiveIJobListener inactiveIJobListener,
                                // Step inactiveJobStep
                                // Flow inactiveJobFlow
-                               Flow multiFlow
+                               // Flow multiFlow
+                               Step partitionerStep
                                ) {
         // JobBuilderFactory의 get("inactiveUserJob")은'inactiveUserJob'이라는 이름의 JobBuilder를 생성
         return jobBuilderFactory.get("inactiveUserJob")
                 .preventRestart() // preventRestart()는 Job의 재실행을 막음
                 .listener(inactiveIJobListener)
+
                 // start(inactiveJobStep)은 파라미터에서 주입받은 휴면회원 관련 Step인 inactiveJobStep을 제일 먼저 실행하도록 설정하는 부분임
                 // inactiveJobStep은 앞선 inactiveUserJob과 같이 InactiveUserJobConfig 클래스에 빈으로 등록
                 // .start(inactiveJobStep)
+
                 // inactiveUserJob 시작 시 Flow를 거쳐 Step을 실행하도록 inactiveJobFlow를 start()에 설정
                 // .start(inactiveJobFlow)
-                .start(multiFlow)// 빈으로 등록한 multiFlow 설정으로 시작
-                .end()
+                // .start(multiFlow)// 빈으로 등록한 multiFlow 설정으로 시작
+                // .end()
+
+                .start(partitionerStep)
                 .build();
     }
 
     /**
-     * 휴면 회원 배치 Step 빈으로 등록(휴면회원 배치 Step 생성 메서드 추가
+     * 회원등급에 따라 파티션을 분할하는 Step
      * @param stepBuilderFactory
-     * @param inactiveUserReader
-     * @param inactiveStepListener
+     * @param inactiveJobStep
      * @return
      */
     @Bean
-    public Step inactiveJobStep(StepBuilderFactory stepBuilderFactory, ListItemReader<User> inactiveUserReader, InactiveStepListener inactiveStepListener) {
+    @JobScope // Job 실행 때 마다 빈을 새로 생성하는 @JobScope를 추가
+    public Step partitionerStep(StepBuilderFactory stepBuilderFactory, Step inactiveJobStep) {
+        return stepBuilderFactory
+                .get("partitionerStep")
+                // 파티셔닝을 사용하는 partitioner 프로퍼티에 Step 이름과 작성한 InactiveUserPartitioner 객체를 생성해 등록함
+                .partitioner("partitionerStep", new InactiveUserPartitioner())
+                // 파라미터로 사용한 gridSize를 등록함
+                // 현재 Grade Enum 값이 3이므로 3이상으로 지정하면 됨
+                .gridSize(5)
+                .step(inactiveJobStep)
+                .taskExecutor(taskExecutor())
+                .build();
+    }
+    /**
+     * 휴면 회원 배치 Step 빈으로 등록(휴면회원 배치 Step 생성 메서드 추가
+     * @param stepBuilderFactory
+     * @param inactiveUserReader
+     * @param inactiveChunkListener
+     * @return
+     */
+    @Bean
+    public Step inactiveJobStep(StepBuilderFactory stepBuilderFactory, ListItemReader<User> inactiveUserReader, InactiveChunkListener inactiveChunkListener) {
         return stepBuilderFactory.get("inactiveUserStep")
                 .<User, User> chunk(CHUNK_SIZE)
                 .reader(inactiveUserReader)
                 .processor(inactiveUserProcessor())
                 .writer(inactiveUserWriter())
-                .listener(inactiveStepListener)
+                .listener(inactiveChunkListener)
                 // 빈으로 생성한 TaskExecutor 등록
-                .taskExecutor(taskExecutor)
+                // .taskExecutor(taskExecutor())
                 /*
                     throttleLimit 설정은 '설정된 제한 횟수만큼만 스레드를 동시에 실행시키겠다'는 뜻임
                     시스템에 할당된 스레드 풀의 크기보다 작은 값으로 설정되어야 함
                     만약 1로 설정하면 기존의 동기화 방식과 동일한 방식으로 실행됨
                     2로 설정하면 스레드르 2개씩 실행시킴
                  */
-                .throttleLimit(2)
+                // .throttleLimit(2)
                 .build();
     }
 
@@ -126,45 +151,62 @@ public class InactiveUserJobConfig {
      * 메서드를 사용하지 않고 상단에서 주입하도록 수정
      * @return
      */
-    /*
     @Bean
-    public TaskExecutor taskExecutor() {
+    TaskExecutor taskExecutor() {
         return new SimpleAsyncTaskExecutor("Batch_Task");
     }
-    */
 
     /**
      * ListItemReader 객체를 사용하면 모든 데이터를 한번에 가져와 메모리에 올려놓고 read() 메서드로 하나씩 배치 처리 작업을 수행할 수 있음
-     * SpEL을 사용해 JobParameters에서 nowDate 파라미터를 전달받음
-     * Date 타입으로 주입해서 곧바로 Date 타입으로 전달받을 수 있음
      * @return
      */
     @Bean
     @StepScope
-    public ListItemReader<User> inactiveUserReader(@Value("#{jobParameters[nowDate]}") Date nowDate, UserRepository userRepository) {
+    public ListItemReader<User> inactiveUserReader(
+            // @Value("#{jobParameters[nowDate]}") Date nowDate
+            // SpEL을 사용하여 ExecutionContext에 할당한 등급값을 불러옴
+            @Value("#{stepExecutionContext[grade]}") String grade, UserRepository userRepository) {
         // 전달받은 현재 날짜값을 UserRepository에서 사용할 수 있는 타입인 LocalDateTime으로 전환함
-        LocalDateTime now = LocalDateTime.ofInstant(nowDate.toInstant(), ZoneId.systemDefault());
-        List<User> inactiveUsers = userRepository.findByUpdatedDateBeforeAndStatusEquals(now.minusYears(1), UserStatus.ACTIVE);
+        // LocalDateTime now = LocalDateTime.ofInstant(nowDate.toInstant(), ZoneId.systemDefault());
+        // List<User> inactiveUsers = userRepository.findByUpdatedDateBeforeAndStatusEquals(now.minusYears(1), UserStatus.ACTIVE);
+
+        log.info(Thread.currentThread().getName());
+        // 휴면회원을 불러오는 쿼리에 등급을 추가해 해당 등급의 휴면회원만 불러오도록 설정함
+        List<User> inactiveUsers = userRepository
+                .findByUpdatedDateBeforeAndStatusEqualsAndGradeEquals(LocalDateTime.now().minusYears(1), UserStatus.ACTIVE, Grade.valueOf(grade));
         return new ListItemReader<>(inactiveUsers);
     }
 
+
     /**
-     * 여러개의 Flow를 멀티 스레드로 실행시키는 멀티 Flow 메서드
-     * @param inactiveJobStep
+     * reader에서 읽은 User를 휴면 상태로 전환하는 processor 메서드
      * @return
      */
-    @Bean
-    public Flow multiFlow(Step inactiveJobStep) {
-        Flow flows[] = new Flow[5];
-        // IntStream을 이용해 flows 배열의 크기(5개)만큼 반복문을 돌림
-        // FlowBuilder 객체로 Flow(inactiveJobFlow) 5개를 생성해서 flows 배열에 할당함
-        IntStream.range(0, flows.length).forEach(i -> flows[i] = new FlowBuilder<Flow>("MultiFlow"+i).from(inactiveJobFlow(inactiveJobStep)).end());
-        FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("MultiFlowTest");
-        return flowBuilder
-                .split(taskExecutor) // multiFlow에서 사용할 TaskExecutor를 등록함
-                .add(flows) // inactiveJobFlow 5개가 할당된 flows 배열을 추가함
-                .build();
+    private ItemProcessor<User, User> inactiveUserProcessor() {
+        return User::setInactive;
+        //메서드 레퍼런스 표현이 아닌 방식
+        /*
+        return new ItemProcessor<User, User>() {
+            @Override
+            public User process(User user) throws Exception {
+                return user.setInactive();
+            }
+        };
+        */
     }
+
+    /**
+     * 제네릭에 저장할 타입을 명시하고 EntityManagerFactory만 설정하면 Processor에서 넘어온 데이터를 청크 단위로 저장함
+     * @return
+     */
+    private JpaItemWriter<User> inactiveUserWriter() {
+        JpaItemWriter<User> jpaItemWriter = new JpaItemWriter<>();
+        jpaItemWriter.setEntityManagerFactory(entityManagerFactory);
+        return jpaItemWriter;
+    }
+
+
+
 
     /**
      * 조건에 따라 Step의 실행 여부를 처리하는 inactiveJobFlow 설정하기
@@ -189,6 +231,25 @@ public class InactiveUserJobConfig {
                 .on(FlowExecutionStatus.COMPLETED.getName()).to(inactiveJobStep)
                 .end();
     }
+
+    /**
+     * 여러개의 Flow를 멀티 스레드로 실행시키는 멀티 Flow 메서드
+     * @param inactiveJobStep
+     * @return
+     */
+    @Bean
+    public Flow multiFlow(Step inactiveJobStep) {
+        Flow flows[] = new Flow[5];
+        // IntStream을 이용해 flows 배열의 크기(5개)만큼 반복문을 돌림
+        // FlowBuilder 객체로 Flow(inactiveJobFlow) 5개를 생성해서 flows 배열에 할당함
+        IntStream.range(0, flows.length).forEach(i -> flows[i] = new FlowBuilder<Flow>("MultiFlow"+i).from(inactiveJobFlow(inactiveJobStep)).end());
+        FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("MultiFlowTest");
+        return flowBuilder
+                .split(taskExecutor()) // multiFlow에서 사용할 TaskExecutor를 등록함
+                .add(flows) // inactiveJobFlow 5개가 할당된 flows 배열을 추가함
+                .build();
+    }
+
 
     /**
      * 기본 빈 생성은 싱글턴이지만 @StepScope를 사용하면 해당 메서드는 Step의 주기에 따라 새로운 빈을 생성함
@@ -232,33 +293,6 @@ public class InactiveUserJobConfig {
         return jpaPagingItemReader;
     }
     */
-
-    /**
-     * reader에서 읽은 User를 휴면 상태로 전환하는 processor 메서드
-     * @return
-     */
-    private ItemProcessor<User, User> inactiveUserProcessor() {
-        return User::setInactive;
-        //메서드 레퍼런스 표현이 아닌 방식
-        /*
-        return new ItemProcessor<User, User>() {
-            @Override
-            public User process(User user) throws Exception {
-                return user.setInactive();
-            }
-        };
-        */
-    }
-
-    /**
-     * 제네릭에 저장할 타입을 명시하고 EntityManagerFactory만 설정하면 Processor에서 넘어온 데이터를 청크 단위로 저장함
-     * @return
-     */
-    private JpaItemWriter<User> inactiveUserWriter() {
-        JpaItemWriter<User> jpaItemWriter = new JpaItemWriter<>();
-        jpaItemWriter.setEntityManagerFactory(entityManagerFactory);
-        return jpaItemWriter;
-    }
 
 
 }
