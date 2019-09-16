@@ -505,3 +505,30 @@ public interface Tasklet {
 
 #### 휴면회원 배치 처리를 Tasklet으로 전환
 기존의 읽기 -> 처리 -> 쓰기로 진행되었던 청크 지향 프로세싱 방식의 구조를 하나로 합쳐놓음
+
+### 6. 배치의 인터셉터 Listener 설정하기
+배치 흐름에서 전후 처리를 하는 Listener를 설정
+- Job의 전후 처리
+- Step의 전후 처리
+- 각 청크 단위에서의 전후 처리
+
+특정 로직을 할당해 제어할 수 있음
+
+스프링 배치에서는 Job의 Listener로 `JobExecutionListener` 인터페이스를 제공함
+
+#### 1. Job의 실행과 종료 메시지를 출력하는 InactiveJobListener 구현
+#### 2. Job 설정에 Listener 등록하기
+Job 정보를 설정하는 `inactiveUserJob()` 메서드에 `InactiveIJobListener`를 추가 했음
+
+#### 배치에서 제공되는 Listener 인터페이스와 어노테이션
+
+| 인터페이스명            | 어노테이션                                                   | 설명                                                         |
+| ----------------------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| `JobExecutionListener`  | `@BeforeJob`<br />`@AfterJob`                                | Job 실행 전후 처리를 담당하는 Listener 설정                  |
+| `ChunkListener`         | `@BeforeChunk`<br />`@AfterChunk`<br />`@AfterChunkError`    | Chunk 실행 전후 처리 및 에러 발생 시 처리를 담당하는 Listener 설정 |
+| `ItemReadListener`      | `@BeforeRead`<br />`@AfterRead`<br />`@OnReadError`          | Read 과정 전후 처리 및 에러 발생 시 처리를 담당하는 Listener 설정 |
+| `ItemProcessListener`   | `@BeforeProcess`<br />`@AfterProcess`<br />`@OnProcessError` | Process 과정 전후 처리 및 에러 발생 시 처리를 담당하는 Listener 설정 |
+| `ItemWriteListener`     | `@BeforeWrite`<br />`@AfterWrite`<br />`@OnWriteError`       | Write 과정 전후 처리 및 에러 발생 시 처리를 담당하는 Listener 설정 |
+| `StepExecutionListener` | `@BeforeStep`<br />`@AfterStep`                              | Step 실행 전후 처리를 담당하는 Listener 설정                 |
+| `SkipListener`          | `@OnSkipInRead`<br />`@OnSkipInWrite`<br />`@OnSkipInProcess` | Step 실행 전후 처리를 담당하는 Listener 설정<br /><br />배치 처리 중 Skip이 발생했을 때를 담당하는 Listener 설정 |
+
