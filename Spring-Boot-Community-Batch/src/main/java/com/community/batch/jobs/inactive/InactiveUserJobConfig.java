@@ -5,7 +5,7 @@ import com.community.batch.domain.enums.UserStatus;
 import com.community.batch.jobs.inactive.listener.InactiveIJobListener;
 import com.community.batch.jobs.inactive.listener.InactiveStepListener;
 import com.community.batch.repository.UserRepository;
-import lombok.AllArgsConstructor;
+
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
@@ -17,15 +17,22 @@ import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.support.ListItemReader;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
+import org.springframework.core.task.SyncTaskExecutor;
+import org.springframework.core.task.TaskExecutor;
 
-import javax.persistence.EntityManagerFactory;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
 import java.util.List;
+
+import javax.persistence.EntityManagerFactory;
+
+import lombok.AllArgsConstructor;
 
 /**
  * Created by freejava1191@gmail.com on 2019-09-13
@@ -33,27 +40,33 @@ import java.util.List;
  * GitHub : https://github.com/freelife1191
  */
 @Configuration
-@AllArgsConstructor
+// @AllArgsConstructor
 public class InactiveUserJobConfig {
 
     // 한번에 읽어올 크기
     private final static int CHUNK_SIZE = 15;
 
     private final EntityManagerFactory entityManagerFactory;
+    private TaskExecutor taskExecutor;
+
+    public InactiveUserJobConfig(EntityManagerFactory entityManagerFactory) {
+        this.entityManagerFactory = entityManagerFactory;
+        this.taskExecutor = new SimpleAsyncTaskExecutor("Batch_Task");
+    }
 
     /**
      * 휴면회원 배치 Job 빈으로 등록(휴면회원 배치 Job 생성 메서드 추가)
      * @param jobBuilderFactory
      * @param inactiveIJobListener
-     * @param inactiveJobFlow
+     * @param inactiveJobStep
      * @return
      */
     @Bean
     // Job 생성을 직관적이고 편리하게 도와주는 빌더인 JobBuilderFactory를 주입
     // 빈에 주입할 객체를 파라미터로 명시하면 @Autowired 어노테이션을 쓰는 것과 같은 효과가 있음
     public Job InactiveUserJob(JobBuilderFactory jobBuilderFactory, InactiveIJobListener inactiveIJobListener,
-                               //Step inactiveJobStep
-                               Flow inactiveJobFlow
+                               Step inactiveJobStep
+                               // Flow inactiveJobFlow
                                ) {
         // JobBuilderFactory의 get("inactiveUserJob")은'inactiveUserJob'이라는 이름의 JobBuilder를 생성
         return jobBuilderFactory.get("inactiveUserJob")
@@ -61,10 +74,10 @@ public class InactiveUserJobConfig {
                 .listener(inactiveIJobListener)
                 // start(inactiveJobStep)은 파라미터에서 주입받은 휴면회원 관련 Step인 inactiveJobStep을 제일 먼저 실행하도록 설정하는 부분임
                 // inactiveJobStep은 앞선 inactiveUserJob과 같이 InactiveUserJobConfig 클래스에 빈으로 등록
-                // .start(inactiveJobStep)
+                .start(inactiveJobStep)
                 // inactiveUserJob 시작 시 Flow를 거쳐 Step을 실행하도록 inactiveJobFlow를 start()에 설정
-                .start(inactiveJobFlow)
-                .end()
+                // .start(inactiveJobFlow)
+                // .end()
                 .build();
     }
 
@@ -83,8 +96,39 @@ public class InactiveUserJobConfig {
                 .processor(inactiveUserProcessor())
                 .writer(inactiveUserWriter())
                 .listener(inactiveStepListener)
+                // 빈으로 생성한 TaskExecutor 등록
+                .taskExecutor(taskExecutor)
+                /*
+                    throttleLimit 설정은 '설정된 제한 횟수만큼만 스레드를 동시에 실행시키겠다'는 뜻임
+                    시스템에 할당된 스레드 풀의 크기보다 작은 값으로 설정되어야 함
+                    만약 1로 설정하면 기존의 동기화 방식과 동일한 방식으로 실행됨
+                    2로 설정하면 스레드르 2개씩 실행시킴
+                 */
+                .throttleLimit(2)
                 .build();
     }
+
+    /*@Bean
+    public Step inactiveJobStep(StepBuilderFactory stepBuilderFactory, InactiveItemTasklet inactiveItemTasklet) {
+        return stepBuilderFactory.get("inactiveUserTaskleyStep")
+                .tasklet(inactiveItemTasklet)
+                .build();
+    }*/
+
+    /**
+     * SimpleAsyncTaskExecutor를 생성해 빈으로 등록함
+     * 생성자의 매개변수로 들어가는 값은 Task에 할당되는 이름이 됨
+     * 기본적으로 첫 번째 Task는 'Batch_Task1'이라는 이름으로 할당되며 뒤에 붙는 숫자가 하나씩 증가하며 이름이 정해짐
+     *
+     * 메서드를 사용하지 않고 상단에서 주입하도록 수정
+     * @return
+     */
+    /*
+    @Bean
+    public TaskExecutor taskExecutor() {
+        return new SimpleAsyncTaskExecutor("Batch_Task");
+    }
+    */
 
     /**
      * ListItemReader 객체를 사용하면 모든 데이터를 한번에 가져와 메모리에 올려놓고 read() 메서드로 하나씩 배치 처리 작업을 수행할 수 있음

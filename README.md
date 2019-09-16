@@ -581,3 +581,35 @@ inactiveUserJob() 메서드에서는 Step이 아닌 Flow를 주입받고
 3. InactiveJobExecutionDecider 클래스의 decide() 메서드를 거쳐 반환값으로 FlowExecutionStatus.FAILED가 반환되면 end()를 사용해 곧바로 끝나도록 설정
 4. InactiveJobExecutionDecider 클래스의 decide() 메서드를 거쳐 반환값으로 FlowExecutionStatus.COMPLETED가 반환되면 기존에 설정한 inactiveJobStep을 실행하도록 설정
 5. inactiveUserJob 시작 시 Flow를 거쳐 Step을 실행하도록 inactiveJobFlow를 start()에 설정
+
+## 7.7 멀티 스레드로 여러 개의 Step 실행하기
+보통은 배치 처리당 스레드 하나만 실행할 경우가 대부분이지만 상황에 따라 여러 Step을 동시에 실행하는 경우도 있음
+
+스프링 부트 배치에서 멀티 스레드로 Step을 실행하는 전략
+
+- `TaskExecutor`를 사용해 여러 Step 동작시키기
+- 여러 개의 Flow 실행시키기
+- 파티셔닝을 사용한 병렬 프로그래밍
+
+### 1. `TaskExecutor`를 사용해 여러 Step 동작시키기
+`TaskExecutor` 인터페이스는 멀티 스레드로 Step을 실행하는 가장 기본적인 방법임
+
+Task는 Runnable 인터페이스를 구현해 각각의 스레드가 독립적으로 실행되도록 작업을 할당하는 객체임
+
+스프링에서는 이러한 Task를 실행하는 객체를 `TaskExecutor` 인터페이스를 통해 구현하도록 정의했음
+
+스레드를 요청할 때마다 스레드를 새로 생성하는 `SimpleAsyncTaskExecutor` 객체를 사용
+
+#### Step 설정에 TaskExecutor 등록하기
+휴면회원 배치 처리에 `TaskExecutor`를 등록해 멀티 스레드로 실행하도록 설정
+
+1. 빈으로 생성한 `TaskExecutor` 등록
+
+2. `throttleLimit` 설정은 '**설정된 제한 횟수만큼만 스레드를 동시에 실행시키겠다**'는 뜻임  
+	 시스템에 할당된 스레드 풀의 크기보다 작은 값으로 설정되어야 함  
+ 	 만약 1로 설정하면 기존의 동기화 방식과 동일한 방식으로 실행됨  
+	 2로 설정하면 스레드르 2개씩 실행시킴
+
+3. `SimpleAsyncTaskExecutor`를 생성해 빈으로 등록함
+   생성자의 매개변수로 들어가는 값은 Task에 할당되는 이름이 됨
+   기본적으로 첫 번째 Task는 '**Batch_Task1**'이라는 이름으로 할당되며 뒤에 붙는 숫자가 하나씩 증가하며 이름이 정해짐
