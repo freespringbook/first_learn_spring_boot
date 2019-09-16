@@ -3,6 +3,7 @@ package com.community.batch.jobs.inactive;
 import com.community.batch.domain.User;
 import com.community.batch.domain.enums.UserStatus;
 import com.community.batch.jobs.inactive.listener.InactiveIJobListener;
+import com.community.batch.jobs.inactive.listener.InactiveStepListener;
 import com.community.batch.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.batch.core.Job;
@@ -34,8 +35,8 @@ public class InactiveUserJobConfig {
 
     // 한번에 읽어올 크기
     private final static int CHUNK_SIZE = 15;
+
     private final EntityManagerFactory entityManagerFactory;
-    private final UserRepository userRepository;
 
     @Bean
     // Job 생성을 직관적이고 편리하게 도와주는 빌더인 JobBuilderFactory를 주입
@@ -43,8 +44,7 @@ public class InactiveUserJobConfig {
     public Job InactiveUserJob(JobBuilderFactory jobBuilderFactory, InactiveIJobListener inactiveIJobListener, Step inactiveJobStep) {
         // JobBuilderFactory의 get("inactiveUserJob")은'inactiveUserJob'이라는 이름의 JobBuilder를 생성
         return jobBuilderFactory.get("inactiveUserJob")
-                // preventRestart()는 Job의 재실행을 막음
-                .preventRestart()
+                .preventRestart() // preventRestart()는 Job의 재실행을 막음
                 .listener(inactiveIJobListener)
                 // start(inactiveJobStep)은 파라미터에서 주입받은 휴면회원 관련 Step인 inactiveJobStep을 제일 먼저 실행하도록 설정하는 부분임
                 // inactiveJobStep은 앞선 inactiveUserJob과 같이 InactiveUserJobConfig 클래스에 빈으로 등록
@@ -53,12 +53,13 @@ public class InactiveUserJobConfig {
     }
 
     @Bean
-    public Step inactiveJobStep(StepBuilderFactory stepBuilderFactory, ListItemReader<User> inactiveUserReader) {
+    public Step inactiveJobStep(StepBuilderFactory stepBuilderFactory, ListItemReader<User> inactiveUserReader, InactiveStepListener inactiveStepListener) {
         return stepBuilderFactory.get("inactiveUserStep")
                 .<User, User> chunk(CHUNK_SIZE)
                 .reader(inactiveUserReader)
                 .processor(inactiveUserProcessor())
                 .writer(inactiveUserWriter())
+                .listener(inactiveStepListener)
                 .build();
     }
 

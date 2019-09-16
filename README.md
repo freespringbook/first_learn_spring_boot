@@ -532,3 +532,15 @@ Job 정보를 설정하는 `inactiveUserJob()` 메서드에 `InactiveIJobListene
 | `StepExecutionListener` | `@BeforeStep`<br />`@AfterStep`                              | Step 실행 전후 처리를 담당하는 Listener 설정                 |
 | `SkipListener`          | `@OnSkipInRead`<br />`@OnSkipInWrite`<br />`@OnSkipInProcess` | Step 실행 전후 처리를 담당하는 Listener 설정<br /><br />배치 처리 중 Skip이 발생했을 때를 담당하는 Listener 설정 |
 
+### 7. 어노테이션 기반으로 Listener 설정하기
+인터페이스 대신 어노테이션을 사용해 Listener 설정
+
+Step 실행 전후 처리 어노테이션인 `@BeforeStep`, `@AfterStep`을 사용해 Step 시작 전후에 로그 메시지를 출력
+
+#### 1. 어노테이션을 사용한 InactiveStepListener 생성
+**StepExecutionListener** 인터페이스를 구현하지 않고 `@BeforeStep`, `@AfterStep` 어노테이션을 사용해 동작하도록 만듬
+
+#### 2. Step 설정에 Listener 등록하기
+**InactiveStepListener**를 Step의 Listener로 설정하는 코드
+
+**inactiveJobStep** 빈의 설정에서 listener(InactiveStepListener)를 추가해 **InactiveStepListener**등록
