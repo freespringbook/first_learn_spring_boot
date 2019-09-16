@@ -544,3 +544,40 @@ Step 실행 전후 처리 어노테이션인 `@BeforeStep`, `@AfterStep`을 사�
 **InactiveStepListener**를 Step의 Listener로 설정하는 코드
 
 **inactiveJobStep** 빈의 설정에서 listener(InactiveStepListener)를 추가해 **InactiveStepListener**등록
+
+### 8. Step의 흐름을 제어하는 Flow
+Step 과정의 가장 기본은 '읽기-처리-쓰기' 
+
+스프링 배치에서는 흐름을 제어하는 Flow를 제공함  
+특정 조건에 따라 Step의 실행 여부를 정할 수 있음
+
+#### Flow의 조건에 따른 흐름
+![Flow의 조건에 따른 흐름](images/springbatch_flow.png)
+
+흐름에서 조건에 해당하는 부분을 `JobExecutionDecider` 인터페이스를 사용해 구현할 수 있음
+
+`JobExecutionDecider` 인터페이스는 `decide()` 메서드 하나만 제공함
+
+##### JobExecutionDecider 인터페이스
+```java
+public interface JobExecutionDecider {
+	FlowExecutionStatus decide(JobExecution jobExecution, @Nullable StepExecution stepExecution);
+}
+```
+
+#### 1. InactiveJobExecutionDecider 구현하기
+- Random 객체를 사용해 랜덤한 정숫값을 생성하고 양수인지 확인함
+- 양수면 FlowExecutionStatus.COMPLETED를 반환함
+- 음수면 FlowExecutionStatus.FAILED를 반환함
+
+#### 2. 조건에 따라 Step의 실행 여부를 처리하는 inactiveJobFlow 설정하기
+inactiveUserJob() 메서드에서는 Step이 아닌 Flow를 주입받고  
+주입받을 Flow를 inactiveJobFlow() 메서드를 통해 빈으로 등록함
+
+1. FlowBuilder를 사용하면 Flow 생성을 한결 편하게 할 수 있음
+   FlowBuilder의 생성자에 원하는 Flow 이름을 넣어서 생성함
+	 여기서는 'inactiveJobFlow'로 설정
+2. 생성한 조건을 처리하는 InactiveJobExecutionDecider 클래스를 start로 설정해 맨 처음 시작하도록 지정함
+3. InactiveJobExecutionDecider 클래스의 decide() 메서드를 거쳐 반환값으로 FlowExecutionStatus.FAILED가 반환되면 end()를 사용해 곧바로 끝나도록 설정
+4. InactiveJobExecutionDecider 클래스의 decide() 메서드를 거쳐 반환값으로 FlowExecutionStatus.COMPLETED가 반환되면 기존에 설정한 inactiveJobStep을 실행하도록 설정
+5. inactiveUserJob 시작 시 Flow를 거쳐 Step을 실행하도록 inactiveJobFlow를 start()에 설정

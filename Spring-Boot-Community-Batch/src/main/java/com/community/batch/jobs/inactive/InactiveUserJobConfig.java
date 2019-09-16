@@ -11,6 +11,9 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepScope;
+import org.springframework.batch.core.job.builder.FlowBuilder;
+import org.springframework.batch.core.job.flow.Flow;
+import org.springframework.batch.core.job.flow.FlowExecutionStatus;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.batch.item.database.JpaItemWriter;
 import org.springframework.batch.item.support.ListItemReader;
@@ -38,20 +41,40 @@ public class InactiveUserJobConfig {
 
     private final EntityManagerFactory entityManagerFactory;
 
+    /**
+     * 휴면회원 배치 Job 빈으로 등록(휴면회원 배치 Job 생성 메서드 추가)
+     * @param jobBuilderFactory
+     * @param inactiveIJobListener
+     * @param inactiveJobFlow
+     * @return
+     */
     @Bean
     // Job 생성을 직관적이고 편리하게 도와주는 빌더인 JobBuilderFactory를 주입
     // 빈에 주입할 객체를 파라미터로 명시하면 @Autowired 어노테이션을 쓰는 것과 같은 효과가 있음
-    public Job InactiveUserJob(JobBuilderFactory jobBuilderFactory, InactiveIJobListener inactiveIJobListener, Step inactiveJobStep) {
+    public Job InactiveUserJob(JobBuilderFactory jobBuilderFactory, InactiveIJobListener inactiveIJobListener,
+                               //Step inactiveJobStep
+                               Flow inactiveJobFlow
+                               ) {
         // JobBuilderFactory의 get("inactiveUserJob")은'inactiveUserJob'이라는 이름의 JobBuilder를 생성
         return jobBuilderFactory.get("inactiveUserJob")
                 .preventRestart() // preventRestart()는 Job의 재실행을 막음
                 .listener(inactiveIJobListener)
                 // start(inactiveJobStep)은 파라미터에서 주입받은 휴면회원 관련 Step인 inactiveJobStep을 제일 먼저 실행하도록 설정하는 부분임
                 // inactiveJobStep은 앞선 inactiveUserJob과 같이 InactiveUserJobConfig 클래스에 빈으로 등록
-                .start(inactiveJobStep)
+                // .start(inactiveJobStep)
+                // inactiveUserJob 시작 시 Flow를 거쳐 Step을 실행하도록 inactiveJobFlow를 start()에 설정
+                .start(inactiveJobFlow)
+                .end()
                 .build();
     }
 
+    /**
+     * 휴면 회원 배치 Step 빈으로 등록(휴면회원 배치 Step 생성 메서드 추가
+     * @param stepBuilderFactory
+     * @param inactiveUserReader
+     * @param inactiveStepListener
+     * @return
+     */
     @Bean
     public Step inactiveJobStep(StepBuilderFactory stepBuilderFactory, ListItemReader<User> inactiveUserReader, InactiveStepListener inactiveStepListener) {
         return stepBuilderFactory.get("inactiveUserStep")
@@ -76,6 +99,26 @@ public class InactiveUserJobConfig {
         LocalDateTime now = LocalDateTime.ofInstant(nowDate.toInstant(), ZoneId.systemDefault());
         List<User> inactiveUsers = userRepository.findByUpdatedDateBeforeAndStatusEquals(now.minusYears(1), UserStatus.ACTIVE);
         return new ListItemReader<>(inactiveUsers);
+    }
+
+    /**
+     * 조건에 따라 Step의 실행 여부를 처리하는 inactiveJobFlow 설정하기
+     * @param inactiveJobStep
+     * @return
+     */
+    @Bean
+    public Flow inactiveJobFlow(Step inactiveJobStep) {
+        // FlowBuilder를 사용하면 Flow 생성을 한결 편하게 할 수 있음
+        // FlowBuilder의 생성자에 원하는 Flow 이름을 넣어서 생성함
+        FlowBuilder<Flow> flowBuilder = new FlowBuilder<>("inactiveJobFlow");
+        return flowBuilder
+                // 생성한 조건을 처리하는 InactiveJobExecutionDecider 클래스를 start로 설정해 맨 처음 시작하도록 지정함
+                .start(new InactiveJobExecutionDecider())
+                // InactiveJobExecutionDecider 클래스의 decide() 메서드를 거쳐 반환값으로 FlowExecutionStatus.FAILED가 반환되면 end()를 사용해 곧바로 끝나도록 설정
+                .on(FlowExecutionStatus.FAILED.getName()).end()
+                // InactiveJobExecutionDecider 클래스의 decide() 메서드를 거쳐 반환값으로 FlowExecutionStatus.COMPLETED가 반환되면 기존에 설정한 inactiveJobStep을 실행하도록 설정
+                .on(FlowExecutionStatus.COMPLETED.getName()).to(inactiveJobStep)
+                .end();
     }
 
     /**
