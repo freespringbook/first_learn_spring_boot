@@ -613,3 +613,36 @@ Task는 Runnable 인터페이스를 구현해 각각의 스레드가 독립적�
 3. `SimpleAsyncTaskExecutor`를 생성해 빈으로 등록함
    생성자의 매개변수로 들어가는 값은 Task에 할당되는 이름이 됨
    기본적으로 첫 번째 Task는 '**Batch_Task1**'이라는 이름으로 할당되며 뒤에 붙는 숫자가 하나씩 증가하며 이름이 정해짐
+
+### 2. 여러 개의 Flow 실행시키기
+Flow를 멀티 스레드로 실행시키는 방법
+
+휴면회원으로 전환될 회원 데이터를 기간별로 나눠서 각각 스레드별로 처리하는 방법이 적절
+
+#### SimpleAsyncTaskExecutor 빈으로 등록
+```java
+@Configuration
+public class InactiveUserJobConfig {
+
+		...
+    private TaskExecutor taskExecutor;
+
+    public InactiveUserJobConfig(EntityManagerFactory entityManagerFactory) {
+        ...
+        this.taskExecutor = new SimpleAsyncTaskExecutor("Batch_Task");
+    }
+```
+
+#### 멀티 Flow 설정하기
+1. 빈으로 등록한 **multiFlow** 설정으로 시작
+
+2. `IntStream`을 이용해 flows 배열의 크기(5개)만큼 반복문을 돌림
+   `FlowBuilder` 객체로 Flow(inactiveJobFlow) 5개를 생성해서 flows 배열에 할당함
+
+3. **multiFlow**에서 사용할 `TaskExecutor`를 등록함
+
+4. `inactiveJobFlow` 5개가 할당된 flows 배열을 추가함
+
+5. 기본의 **inactiveJobFlow**는 빈으로 등록되어 있음
+   빈은 기본적으로 싱글턴으로 등록되기 때문에 여러 **inactiveJobFlow**를 각각 생성하려면
+	 `@Bean` 어노테이션을 제거하여 빈이 아닌 일반 객체를 생성해 반환하도록 설정해야 함

@@ -59,7 +59,7 @@ public class InactiveUserJobConfig {
      * 휴면회원 배치 Job 빈으로 등록(휴면회원 배치 Job 생성 메서드 추가)
      * @param jobBuilderFactory
      * @param inactiveIJobListener
-     * @param inactiveJobStep
+     * @param multiFlow
      * @return
      */
     @Bean
@@ -148,6 +148,11 @@ public class InactiveUserJobConfig {
         return new ListItemReader<>(inactiveUsers);
     }
 
+    /**
+     * 여러개의 Flow를 멀티 스레드로 실행시키는 멀티 Flow 메서드
+     * @param inactiveJobStep
+     * @return
+     */
     @Bean
     public Flow multiFlow(Step inactiveJobStep) {
         Flow flows[] = new Flow[5];
