@@ -23,7 +23,7 @@
 - ItemReaders, ItemProcessors, ItemWriters에 대한 빌더를 제공함
 
 ### 3. 스프링 부트 배치의 주의사항
-스프링 부트 배치는 스프링 배치를 간편하게 상요할 수 있게 래핑한 프로젝트임
+스프링 부트 배치는 스프링 배치를 간편하게 사용할 수 있게 래핑한 프로젝트임
 ##### 스프링 부트 배치와 스프링 배치의 주의사항
 1. 가능하면 단순화해서 복잡한 구조와 로직을 피해야 함
 2. 데이터를 직접 사용하는 작업이 빈번하게 일어나므로 데이터 무결성을 유지하는 유효성 검사 등의 방어책이 있어야 함
@@ -44,7 +44,7 @@
 2. 처리(processing): 원하는 방식으로 데이터를 가공/처리함
 3. 쓰기(write): 수정된 데이터를 다시 저장소(데이터베이스)에 저장함
 
-![배치 관련 객체 관계도](/images/batch_object_relationship.png)
+![배치 관련 객체 관계도](images/batch_object_relationship.png)
 
 Job 이라는 하나의 큰 일감(Job)에 여러 단계(Step)를 두고, 각 단계를 배치의 기본 흐름대로 구현함
 
@@ -97,7 +97,7 @@ public JobFlowBuilder flow(Step step) {
   return new FlowJobBuilder(this).start(Step);
 }
 ```
-`JobBuilder`는 직접적으로 `Job`을 생성하는 거시 아니라 별도의 구체적인 빌더를 생성하여 반환함  
+`JobBuilder`는 직접적으로 `Job`을 생성하는 것이 아니라 별도의 구체적인 빌더를 생성하여 반환함  
 `Job`을 생성하기 위한 `Step` 또는 `Flow`를 파라미터로 받아 구체적인 빌더를 생성함  
 `Job`은 `Step` 또는 `Flow` 인스턴스의 컨테이너 역할을 하기 떄문에 생성하기 전에 인스턴스를 전달받음
 
@@ -224,7 +224,7 @@ public class StepExecution extends Entity {
 - **failureExeptions**: `Step` 실행 중 발생한 예외를 **List** 타입으로 지정
 
 ### 3. JobRepository
-`JobRepository`는 배치 처리 정볼르 담고 있는 매커니즘  
+`JobRepository`는 배치 처리 정보를 담고 있는 매커니즘  
 어떤 `Job`이 실행되었으며 몇 번 실행되었고 언제 끝났는지 등 배치 처리에 대한 메타데이터를 저장
 
 `JobRepository`는 `Step`의 실행 정보를 담고 있는 `StepExecution`도 저장소에 저장하며 전체 메타데이터를 저장/관리하는 역할을 수행
@@ -283,13 +283,13 @@ public interface ItemWriter<T> {
 ## 7.3 스프링 부트 휴면회원 배치 설계하기
 커뮤니티에 가입한 회원중 1년이 지나도록 상태 변화가 없는 회원을 휴면회원으로 전환하는 배치 개발
 
-![전체 배치 프로세스](/images/all_batch_process.png)
+![전체 배치 프로세스](images/all_batch_process.png)
 1. H2 DB에 저장된 데이터 중 1년간 업데이트되지 않은 사용자를 찾는 로직을 ItemReader로 구현
 2. 대상 사용자 데이터의 상탯값을 휴면회원으로 전환하는 프로세스를 ItemProcessor에 구현
 3. 상탯값이 변한 휴면회원을 실제로 DB에 저장하는 ItemWriter를 구현
 
 ## 7.4 스프링 부트 배치 설정하기
-배치 프로젝트 생성 'Spring-Boot-Community-Bathch'
+배치 프로젝트 생성 'Spring-Boot-Community-Batch'
 
 1. build.gradle 의존성 설정
 2. UserStatus, SocialType Enum
@@ -319,7 +319,7 @@ public interface ItemWriter<T> {
 
 ##### 1. 휴면회원 배치 Job 빈으로 등록(휴면회원 배치 Job 생성 메서드 추가) - InactiveUserJobConfig.java
 - Job 생성을 직관적이고 편리하게 도와주는 빌더인 JobBuilderFactory를 주입  
-  빈에 주입할 객체를 파라미터로 명시하면 @Autowired 어노테이션을 쓰는 것과 같은 효과가 있음
+  빈에 주입할 객체를 파라미터로 명시하면 `@Autowired` 어노테이션을 쓰는 것과 같은 효과가 있음
 - JobBuilderFactory의 get("inactiveUserJob")은'inactiveUserJob'이라는 이름의 JobBuilder를 생성  
   preventRestart()는 Job의 재실행을 막음
 - start(inactiveJobStep)은 파라미터에서 주입받은 휴면회원 관련 Step인 inactiveJobStep을 제일 먼저 실행하도록 설정하는 부분임  
@@ -331,21 +331,21 @@ public interface ItemWriter<T> {
 	즉, 커밋의 단위가 10개 임
 - Step의 reader.processor.writer를 각각 설정했음
 ##### 3. 휴면회원 배치 Reader 빈으로 등록(휴면회원 배치 Reader 생성 메서드 추가)
-- 기본 빈 생성은 싱글턴이지만 @StepScope를 사용하면 해당 메서드는 Step의 주기에 따라 새로운 빈을 생성함  
+- 기본 빈 생성은 싱글턴이지만 `@StepScope`를 사용하면 해당 메서드는 Step의 주기에 따라 새로운 빈을 생성함  
   즉, 각 Step의 실행마다 새로운 빈을 만들기 때문에 지연 생성이 가능함  
-	주의할 사항은 @StepScope는 기본 프록시 모드가 반환되는 클래스 타입을 참조하기 때문에 @StepScope를 사용하면 반드시 구현된 반환 타입을 명시해 반환해야 함  
+	주의할 사항은 `@StepScope`는 기본 프록시 모드가 반환되는 클래스 타입을 참조하기 때문에 `@StepScope`를 사용하면 반드시 구현된 반환 타입을 명시해 반환해야 함  
 	여기서는 반환 타입을 `QueueItemReader<User>`라고 명시했음
 - 현재 날짜 기준 1년 전의 날짜값과 User의 상태값이 ACTIVE인 User 리스트를 불러오는 쿼리
 - QueueItemReader 객체를 생성하고 불러온 휴면회원 타깃 대상 데이터를 객체에 넣어 반환
 ##### 4. 큐를 사용한 Reader 객체 QueueItemReader를 별도로 생성 - QueueItemReader.java
 - QueueItemReader를 사용해 휴면회원으로 지정될 타깃 데이터를 한번에 불러와 큐에 담아놓음
-- read() 메서드를 사용할 때 큐의 poll() 메서드를 사용하여 큐에서 데이터를 하나씩 반환함
+- **read()** 메서드를 사용할 때 큐의 **poll()** 메서드를 사용하여 큐에서 데이터를 하나씩 반환함
 ##### 5. 휴면회원으로 전환시키는 inactiveUserProcessor 생성 메서드 추가
 - reader에서 읽은 User를 휴면 상태로 전환하는 processor 메서드
 ##### 6. 휴면회원을 DB에 저장하는 inactiveUserWriter 생성 메서드 추가
 - 휴면회원을 DB에 저장
 - 리스트 타입을 앞서 설정한 청크 단위로 받음
-- 청크 단위를 10으로 설정했으므로 users에는 휴면회원 10개가 주어지며 saveAll() 메서드를 사용해서 한번에 DB에 저장함
+- 청크 단위를 10으로 설정했으므로 users에는 휴면회원 10개가 주어지며 **saveAll()** 메서드를 사용해서 한번에 DB에 저장함
 ##### 7. BatchApplication 클래스에 `@EnableBatchProcessing` 어노테이션 추가
 - 배치 작업에 필요한 빈을 미리 등록하여 사용할 수 있도록 해줌
 
@@ -432,7 +432,7 @@ JPA를 사용하고 있으므로 JpaItemWriter를 적용
 ### 4. 테스트 시에만 H2 데이터베이스를 사용하도록 설정하기
 
 #### 1. MySQL 의존성 추가
-build.gradle 파일에 MySQL 런타임 의존성 추가 설정
+**build.gradle** 파일에 MySQL 런타임 의존성 추가 설정
 
 ```groovy
 runtime('mysql:mysql-connector-java')
@@ -567,19 +567,19 @@ public interface JobExecutionDecider {
 
 #### 1. InactiveJobExecutionDecider 구현하기
 - Random 객체를 사용해 랜덤한 정숫값을 생성하고 양수인지 확인함
-- 양수면 FlowExecutionStatus.COMPLETED를 반환함
-- 음수면 FlowExecutionStatus.FAILED를 반환함
+- 양수면 **FlowExecutionStatus.COMPLETED**를 반환함
+- 음수면 **FlowExecutionStatus.FAILED**를 반환함
 
 #### 2. 조건에 따라 Step의 실행 여부를 처리하는 inactiveJobFlow 설정하기
-inactiveUserJob() 메서드에서는 Step이 아닌 Flow를 주입받고  
-주입받을 Flow를 inactiveJobFlow() 메서드를 통해 빈으로 등록함
+**inactiveUserJob()** 메서드에서는 Step이 아닌 Flow를 주입받고  
+주입받을 Flow를 **inactiveJobFlow()** 메서드를 통해 빈으로 등록함
 
 1. FlowBuilder를 사용하면 Flow 생성을 한결 편하게 할 수 있음
    FlowBuilder의 생성자에 원하는 Flow 이름을 넣어서 생성함
 	 여기서는 'inactiveJobFlow'로 설정
 2. 생성한 조건을 처리하는 InactiveJobExecutionDecider 클래스를 start로 설정해 맨 처음 시작하도록 지정함
-3. InactiveJobExecutionDecider 클래스의 decide() 메서드를 거쳐 반환값으로 FlowExecutionStatus.FAILED가 반환되면 end()를 사용해 곧바로 끝나도록 설정
-4. InactiveJobExecutionDecider 클래스의 decide() 메서드를 거쳐 반환값으로 FlowExecutionStatus.COMPLETED가 반환되면 기존에 설정한 inactiveJobStep을 실행하도록 설정
+3. InactiveJobExecutionDecider 클래스의 **decide()** 메서드를 거쳐 반환값으로 **FlowExecutionStatus.FAILED**가 반환되면 end()를 사용해 곧바로 끝나도록 설정
+4. InactiveJobExecutionDecider 클래스의 **decide()** 메서드를 거쳐 반환값으로 **FlowExecutionStatus.COMPLETED**가 반환되면 기존에 설정한 inactiveJobStep을 실행하도록 설정
 5. inactiveUserJob 시작 시 Flow를 거쳐 Step을 실행하도록 inactiveJobFlow를 start()에 설정
 
 ## 7.7 멀티 스레드로 여러 개의 Step 실행하기
